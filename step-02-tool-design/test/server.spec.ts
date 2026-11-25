@@ -72,6 +72,8 @@ describe("learn-mcp-step-02 notes toolset", () => {
 
       const listed = await callTool("list_notes", {});
       expect(listed.structuredContent?.notes).toBeDefined();
+      expect(listed.content?.[0]?.text).toContain("Test note");
+      expect(listed.content?.[0]?.text).toContain(note.id);
 
       const got = await callTool("get_note", { id: note.id });
       expect(got.content?.[0]?.text).toContain("Remember the MCP Inspector URL");

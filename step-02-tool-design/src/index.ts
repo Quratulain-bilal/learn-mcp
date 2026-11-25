@@ -54,18 +54,22 @@ function createServer(env: Env) {
         )
       ).filter((note): note is Note => note !== null);
       notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      return textResult(
+      const summary =
         notes.length === 0
           ? "No notes saved yet. Use create_note to add one."
-          : `Found ${notes.length} note(s).`,
-        {
-          notes: notes.map(({ id, title, createdAt }) => ({
-            id,
-            title,
-            createdAt,
-          })),
-        },
-      );
+          : `Found ${notes.length} note(s):\n${notes
+              .map(
+                ({ id, title, createdAt }) =>
+                  `- id: ${id} | title: ${title} | created: ${createdAt}`,
+              )
+              .join("\n")}\nCall get_note with an id to read the full text.`;
+      return textResult(summary, {
+        notes: notes.map(({ id, title, createdAt }) => ({
+          id,
+          title,
+          createdAt,
+        })),
+      });
     },
   );
 
