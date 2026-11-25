@@ -398,16 +398,36 @@ function signInPage(oauthQuery: string) {
 }
 
 function consentPage(oauthQuery: string, scope: string) {
-  const hidden = `<input type="hidden" name="oauth_query" value="${escapeHtml(oauthQuery)}">`;
+  const hidden = `<input type="hidden" id="oauth_query" value="${escapeHtml(oauthQuery)}"><input type="hidden" id="scope" value="${escapeHtml(scope)}">`;
   return html(`<h1>Allow connector access?</h1>
 <p>The connector is asking to use your signed-in identity.</p>
 <p>Requested scopes: <code>${escapeHtml(scope || "default scopes")}</code></p>
-<form method="post" action="/api/auth/oauth2/consent">${hidden}
-  <button type="submit" name="accept" value="true">Allow</button>
-</form>
-<form method="post" action="/api/auth/oauth2/consent">${hidden}
-  <button type="submit" name="accept" value="false">Deny</button>
-</form>`);
+${hidden}
+<p><button type="button" onclick="submitConsent(true)">Allow</button>
+<button type="button" onclick="submitConsent(false)">Deny</button></p>
+<p id="status"></p>
+<script>
+async function submitConsent(accept) {
+  const status = document.getElementById("status");
+  status.textContent = "Sending...";
+  const response = await fetch("/api/auth/oauth2/consent", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      accept: accept,
+      oauth_query: document.getElementById("oauth_query").value,
+      scope: document.getElementById("scope").value || undefined
+    })
+  });
+  const data = await response.json();
+  if (response.ok && (data.url || data.redirect)) {
+    window.location.href = data.url || data.redirect;
+    return;
+  }
+  status.textContent = JSON.stringify(data);
+}
+</script>`);
 }
 
 function isAuthPath(pathname: string) {
