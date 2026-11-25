@@ -1,0 +1,2 @@
+# Local-only secrets go here (copy to .dev.vars). Never commit .dev.vars.
+# Step 1 has no secrets yet.
