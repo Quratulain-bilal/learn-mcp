@@ -510,7 +510,10 @@ async function protectedMcp(request: Request, env: Env) {
       );
       return mcpHandler.fetch(authorizedRequest);
     },
-    { issuer: context.baseURL, resource: context.resource },
+    {
+      issuer: `${context.baseURL}/api/auth`,
+      resource: context.resource,
+    },
   );
   return handler(request);
 }

@@ -69,7 +69,7 @@ async function tokenFor(identity: TestIdentity) {
         org_id: identity.orgId,
         azp: "test-client",
         aud: RESOURCE,
-        iss: BASE_URL,
+        iss: `${BASE_URL}/api/auth`,
         exp: Math.floor(Date.now() / 1000) + 3600,
       },
     },
