@@ -242,9 +242,13 @@ function createServer(env: Env, identity: Identity, notify: Notify) {
         .bind(identity.orgId)
         .all<{ id: string; name: string; email: string; role: string }>();
       const members = result.results;
-      return textResult(`Found ${members.length} member(s) in your company.`, {
-        members,
-      });
+      const details = members
+        .map((member) => `${member.name} (${member.email}) - ${member.role}`)
+        .join("; ");
+      return textResult(
+        `Found ${members.length} member(s) in your company: ${details}`,
+        { members },
+      );
     },
   );
 
