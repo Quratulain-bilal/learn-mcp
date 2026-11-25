@@ -402,10 +402,10 @@ function consentPage(oauthQuery: string, scope: string) {
   return html(`<h1>Allow connector access?</h1>
 <p>The connector is asking to use your signed-in identity.</p>
 <p>Requested scopes: <code>${escapeHtml(scope || "default scopes")}</code></p>
-<form method="post" action="/oauth2/consent">${hidden}
+<form method="post" action="/api/auth/oauth2/consent">${hidden}
   <button type="submit" name="accept" value="true">Allow</button>
 </form>
-<form method="post" action="/oauth2/consent">${hidden}
+<form method="post" action="/api/auth/oauth2/consent">${hidden}
   <button type="submit" name="accept" value="false">Deny</button>
 </form>`);
 }
