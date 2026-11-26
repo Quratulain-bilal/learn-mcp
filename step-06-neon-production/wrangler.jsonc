@@ -1,0 +1,23 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "learn-mcp-step-06",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-07-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": true,
+	"d1_databases": [
+		{
+			"binding": "AUTH_DB",
+			"database_name": "learn-mcp-step-06-auth",
+			"database_id": "a616373b-edb5-4802-b4af-22a634f77ca8"
+		}
+	],
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "4972edc115d84a89ad427943c0356fed"
+		}
+	]
+}
