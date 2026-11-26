@@ -70,10 +70,9 @@ npm run typecheck
 npm run dev
 ```
 
-For live Neon setup, create a Neon branch named `step-05`, then set the connection string locally and apply the migrations:
+For live Neon setup, create a Neon branch named `step-05`, copy `.dev.vars.example` to `.dev.vars`, and put the connection string on the `NEON_DATABASE_URL` line. The scripts read `.dev.vars` when the environment variable is not set:
 
 ```powershell
-$env:NEON_DATABASE_URL = "postgresql://user:password@ep-example.neon.tech/learn_mcp?sslmode=require"
 npm run migrate
 ```
 

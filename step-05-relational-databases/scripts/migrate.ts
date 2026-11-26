@@ -2,7 +2,16 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { neon } from "@neondatabase/serverless";
 
-const connectionString = process.env.NEON_DATABASE_URL;
+async function getConnectionString() {
+  if (process.env.NEON_DATABASE_URL) return process.env.NEON_DATABASE_URL;
+  const localVars = await readFile(path.join(process.cwd(), ".dev.vars"), "utf8");
+  const line = localVars
+    .split(/\r?\n/)
+    .find((entry) => entry.startsWith("NEON_DATABASE_URL="));
+  return line?.slice("NEON_DATABASE_URL=".length).trim();
+}
+
+const connectionString = await getConnectionString();
 if (!connectionString) {
   throw new Error("Set NEON_DATABASE_URL before running npm run migrate.");
 }
