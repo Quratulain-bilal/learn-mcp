@@ -18,6 +18,7 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 **Official docs.** Keep these open while you build:
 
 - [Stripe Checkout](https://docs.stripe.com/payments/checkout) and [Stripe subscriptions](https://docs.stripe.com/billing/subscriptions/overview). Taking payment for plans, on Stripe's own pages.
+- [MCP: Elicitation, URL mode](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation#url-mode-elicitation-requests). Sending the user to a page such as Stripe Checkout, so payment details never pass through the chat.
 - [Stripe webhooks](https://docs.stripe.com/webhooks). Updating a company's plan when a payment succeeds or a subscription ends.
 - [Claude: directory or custom connector](https://claude.com/docs/connectors/building/directory-vs-custom). When to list publicly and when to share a custom connector.
 - [Claude: submitting to the Connectors Directory](https://claude.com/docs/connectors/building/submission) and [review criteria](https://claude.com/docs/connectors/building/review-criteria). What Anthropic checks.
@@ -40,6 +41,7 @@ Skills only turn into income when someone pays. Most clients will pay you to bui
 - Take payment with Stripe Checkout and keep the company's plan in sync with Stripe webhooks
 - Check the company's plan and usage on every tool call, with a clear message and upgrade link when a limit is reached
 - Keep checkout out of the chat and out of widgets
+- Ask the user to approve a cost before the server spends it, with elicitation: a form that states the cost, or a URL-mode link to Stripe Checkout so card details never pass through the chat
 - Prepare a directory submission: review checklist, privacy policy, terms, test account and screenshots
 - Choose between a public listing and a custom connector for a single client
 
@@ -53,6 +55,7 @@ Three plans stored in Neon, a Stripe Checkout link and webhook handler that upda
 - **Usage metering**: Counting calls or work per company per period, here in a Durable Object named from the company ID, so one company's usage never counts against another's.
 - **Checkout outside the chat**: Payment happens on Stripe's own page, reached by a link.
 - **Webhooks**: Stripe tells your server when a payment succeeds or a subscription changes.
+- **Cost confirmation**: Before an action that costs money, the server asks the user through elicitation, as Supabase's server does before it creates a paid project. Payment itself happens at a URL (URL mode), never in a form.
 - **Directory review**: The checks a client's directory runs before listing your server.
 
 ## Planned outline
@@ -97,7 +100,7 @@ Using Stripe in test mode, create the products and prices, add a Checkout link p
 **4. Check the plan on every call.**
 
 ```text
-Count each company's monthly usage in a Durable Object named from the company ID (org:<orgId>) and check it, with the company's plan, at the start of every tool call. When a limit is reached, return a clear, recoverable message with an upgrade link that opens outside the chat. Add a get_my_plan tool and a small widget showing plan and usage, with no checkout inside it.
+Count each company's monthly usage in a Durable Object named from the company ID (org:<orgId>) and check it, with the company's plan, at the start of every tool call. When a limit is reached, return a clear, recoverable message with an upgrade link that opens outside the chat. Add a get_my_plan tool and a small widget showing plan and usage, with no checkout inside it. When the user asks to upgrade from the chat, return input_required with a URL-mode elicitation that opens the Stripe Checkout page (never a form asking for card details), and treat the plan as changed only when Stripe's webhook says so. Before an action that uses a large share of the plan, such as a year-long report, confirm with a form-mode elicitation that states how much of the monthly limit it will use. Reuse the sealed requestState helper from step 16, and keep the plain upgrade link as the fallback for clients without elicitation.
 ```
 
 **5. Prepare the directory submissions.**
@@ -127,6 +130,7 @@ Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ D
 - [ ] No secrets are committed (`.dev.vars.example` only, and no Stripe keys)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Stripe runs in test mode only, and the webhook verifies signatures
+- [ ] An upgrade from the chat goes through a URL-mode elicitation to Stripe Checkout (or the link fallback), and a costly action asks for confirmation first
 - [ ] DISTRIBUTION.md has the directory checklist and submission materials (you don't have to actually submit)
 - [ ] Tenant isolation: plans and usage limits are per company, and one company's usage never counts against another's
 - [ ] It works in claude.ai or Claude Desktop

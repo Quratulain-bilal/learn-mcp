@@ -2,7 +2,7 @@
 
 > 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
 
-Tools are only one of the three things an MCP server can offer. **Resources** are data with a fixed address (a URI) that the host app can read and attach to the conversation, and **prompts** are ready-made message templates a person picks, often from a slash menu. In this step your notes server publishes each note as a resource and offers prompts such as "summarize my notes", so you learn when a feature should be a tool, a resource or a prompt.
+Tools are only one of the three things an MCP server can offer. **Resources** are data with a fixed address (a URI) that the host app can read and attach to the conversation, and **prompts** are ready-made message templates a person picks, often from a slash menu. In this step your notes server publishes each note as a resource and offers one prompt, "summarize my notes", so you learn when a feature should be a tool, a resource or a prompt. Prompts are still part of the MCP spec, but few servers use them today, and MCP's maintainers say they have mostly fallen out of use. So this step keeps them small, and step 10 shows the modern way to ship reusable know-how: skills served over MCP. Resources matter more than ever, because widgets (`ui://`) and skills (`skill://`) are both built on them.
 
 ## Learn first
 
@@ -21,27 +21,27 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 
 ## Why this step matters
 
-Putting everything behind tools works, but it isn't always the best design. Reference data the user wants to attach (a policy, a note, a price list) reads better as a resource, and a task users repeat ("prepare a weekly summary") is easier as a prompt they pick. Knowing all three primitives lets you design servers that feel natural in Claude and ChatGPT, and later steps reuse resources for widgets (`ui://`) and skills (`skill://`).
+Putting everything behind tools works, but it isn't always the best design. Reference data the user wants to attach (a policy, a note, a price list) reads better as a resource, and a task users repeat ("prepare a weekly summary") can be a prompt they pick, although for most procedures a skill (step 10) now does that job better. Knowing all three primitives lets you design servers that feel natural in Claude and ChatGPT, and later steps reuse resources for widgets (`ui://`) and skills (`skill://`).
 
 ## Why this technology in an MCP server: resources and prompts
 
 - **What it is.** Resources are read-only data a server exposes at a URI, such as `note://42`. Prompts are named message templates with arguments that a person chooses to run.
 - **Why an MCP server uses it.** The three primitives are controlled by different parties: the **model** chooses tools, the **app or user** chooses resources to attach, and the **user** chooses prompts. Matching each feature to the right primitive gives the user control where they expect it.
 - **What it solves.** Tools that only fetch static data, long instructions users have to retype, and context the user wants to add on purpose rather than leaving it to the model.
-- **Alternatives.** A read-only tool instead of a resource (works everywhere, but the model decides when to use it), or a skill instead of a prompt for procedures the model should apply on its own (step 10). Client support for resources and prompts varies, so check how each client shows them.
+- **Alternatives.** A read-only tool instead of a resource (works everywhere, but the model decides when to use it), or a skill instead of a prompt (step 10), which is now the usual choice for reusable procedures. Client support for resources and prompts varies, so check how each client shows them.
 
 ## What you will learn
 
 - Explain the three MCP primitives and who controls each one
 - Publish notes as resources, with a resource template for `note://{id}`
-- Add prompts with arguments, such as `summarize_notes` and `draft_note_from_meeting`
+- Add one prompt with an argument (`summarize_notes`), and explain why skills have largely taken over the job prompts were meant for
 - Notify clients when the resource list changes
 - Decide whether a feature should be a tool, a resource or a prompt
 - See how Claude and ChatGPT show resources and prompts today
 
 ## What you will build
 
-The step 2 notes server, now also listing each note as a resource (`note://{id}`, with the note's text as its content) and offering two prompts: `summarize_notes` (optionally for a tag) and `draft_note_from_meeting` (takes meeting text and suggests a note). The notes tools stay, so the same data is reachable all three ways.
+The step 2 notes server, now also listing each note as a resource (`note://{id}`, with the note's text as its content) and offering one prompt, `summarize_notes` (optionally for a tag). The notes tools stay, so the same data is reachable all three ways.
 
 ## Key concepts
 
@@ -49,13 +49,14 @@ The step 2 notes server, now also listing each note as a resource (`note://{id}`
 - **Resource template**: A URI pattern such as `note://{id}` that covers many resources.
 - **Prompt**: A named message template, with arguments, that a person picks to start a task.
 - **Who controls what**: The model picks tools, the app or user picks resources, and the user picks prompts.
+- **Prompts today**: Still in the spec and not deprecated, but rarely used. Servers now ship reusable procedures as skills over MCP (step 10), which the model loads when it needs them.
 - **List-changed notification**: A message telling clients that the list of resources or prompts has changed.
 
 ## Planned outline
 
 1. The three MCP primitives
 2. Notes as resources and a resource template
-3. Prompts with arguments
+3. One prompt, and why skills have taken over
 4. Telling clients when lists change
 5. Tool, resource or prompt?
 6. Testing in Claude and ChatGPT
@@ -89,10 +90,10 @@ Read the build-mcp-server skill's resources-and-prompts reference and the MCP re
 Expose each note as a resource with a note://{id} resource template, list them with resources/list, return the note text from resources/read, and send a list-changed notification (through the handler's notify controls) when a note is created or deleted. Explain why the notification only reaches clients with an open subscriptions/listen stream on the same handler, and why that is fine for this step.
 ```
 
-**4. Add prompts.**
+**4. Add a prompt.**
 
 ```text
-Add two prompts: summarize_notes, with an optional tag argument, and draft_note_from_meeting, which takes meeting text. Write each prompt's messages so they tell the model to use the notes tools and resources.
+Add one prompt, summarize_notes, with an optional tag argument. Write its messages so they tell the model to use the notes tools and resources. Then explain in NOTES.md why MCP prompts are rarely used today, and how a skill served over MCP (step 10) differs: who picks it, when it loads, and why it works better across clients.
 ```
 
 **5. Tool, resource or prompt?**

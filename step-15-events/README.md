@@ -4,7 +4,7 @@
 
 Let the server tell the client when something happens, such as a new order or a crossed threshold, using the MCP Events extension.
 
-> **Note:** Client support for this extension is still rolling out. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) for current Claude and ChatGPT status.
+> **Note:** Events (`io.modelcontextprotocol/events`) is a Beta extension with three ways to deliver an event: the client polls, the server pushes, or the server calls a webhook. MCP's maintainers say they don't yet know which will win, so plan for all three. As of November 2026 the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) lists no Events support in Claude yet and webhook-only support in ChatGPT. Check it before you test, and keep the `list_recent_events` fallback.
 
 ## Learn first
 

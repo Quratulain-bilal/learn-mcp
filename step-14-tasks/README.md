@@ -4,7 +4,7 @@
 
 Handle work that takes longer than a single request, such as reports, imports and batch jobs, using the MCP Tasks extension so the client can start, track and retrieve results later. The work itself keeps running on the Cloudflare Workflow you built in step 13, and Tasks becomes the standard MCP face for it.
 
-> **Note:** Client support for this extension is still rolling out. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) for current Claude and ChatGPT status.
+> **Note:** Tasks (`io.modelcontextprotocol/tasks`) is a Beta extension on its way into the core spec. Anthropic announced on November 24, 2026 that Tasks is generally available in Claude and Claude Code for Pro, Max and Ultra plans, and still rolling out to Team and Enterprise. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) for ChatGPT and other clients, and keep the step 13 tools as the fallback.
 
 ## Learn first
 
@@ -26,6 +26,12 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 
 Real business operations don't always finish in seconds. In step 13 the model had to call your own status tool to check on a job. Tasks is the standard way to do the same thing, so hosts that support it can track the job, show its progress and fetch the result without custom tools.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/diagram-tasks-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="../assets/diagram-tasks-light.png">
+  <img src="../assets/diagram-tasks-light.png" alt="Claude starts generate_sales_report and gets a task handle at once. A Cloudflare Workflow runs the job while Claude keeps working. The task moves to input_required, an elicitation form asks the user to confirm an 18-month report, the answer returns through tasks/update, the Workflow resumes, and Claude receives the finished report." width="100%">
+</picture>
+
 ## Why this technology in an MCP server: The MCP Tasks extension
 
 - **What it is.** Tasks is the MCP extension for long-running work: a call returns a task handle right away, and the client checks it with `tasks/get` until the result is ready.
@@ -40,6 +46,7 @@ Real business operations don't always finish in seconds. In step 13 the model ha
 - Back each task with the Cloudflare Workflow instance from step 13, so a task handle maps to a Workflow run
 - Keep step 13's status tools as the fallback for clients that don't support Tasks yet
 - Report progress and handle cancellation
+- Pause a task for the user's answer (the `input_required` status, answered with `tasks/update`), using an elicitation form, for example to confirm a very large report before it runs
 - Show task status and results with an MCP Apps widget
 
 ## What you will build
@@ -95,7 +102,7 @@ Make generate_sales_report task-based: starting it creates a Workflow instance a
 **4. Add progress and cancellation.**
 
 ```text
-Report progress from the Workflow's steps, support cancellation by terminating the Workflow instance, and return the saved report as the task's result.
+Report progress from the Workflow's steps, support cancellation by terminating the Workflow instance, and return the saved report as the task's result. When a report would cover more than a year of orders, move the task to input_required with an elicitation form that states the size and asks the user to confirm, have the Workflow wait for the answer (step.waitForEvent), and continue or cancel when the client sends it with tasks/update. Check that the answer comes from the same company and user who started the task.
 ```
 
 **5. Show it in the UI.**

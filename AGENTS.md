@@ -59,7 +59,7 @@ Don't introduce another language, host, auth library or database without a maint
 ├── LICENSE                   # MIT
 ├── .gitignore                # keeps node_modules, .wrangler and .dev.vars out of forks
 ├── .claude/skills/           # vendored Anthropic mcp-server-dev skills (do not edit)
-├── assets/                  # README hero images: hero-light.png and hero-dark.png, rendered at 2x from assets/src/*.svg
+├── assets/                  # README hero images (rendered at 2x from assets/src/*.svg) and step diagrams, all as light and dark PNGs
 └── step-NN-<name>/           # one folder per step
     └── README.md             # plan, Claude Code prompts, references
 ```
@@ -77,13 +77,13 @@ Don't introduce another language, host, auth library or database without a maint
   7. `step-07-multi-tenancy`: multi-tenant architecture: isolation models, tenant context, shared and dedicated databases, tenant-scoped helpers, cross-tenant tests
   8. `step-08-semantic-search-pgvector`: search by meaning with pgvector on Neon: passages, bge-m3 embeddings on Workers AI, tenant-scoped search that cites or abstains, a retrieval question set in CI
   9. `step-09-generative-ui-mcp-apps`: React widgets via MCP Apps
-  10. `step-10-skills-over-mcp`: Skills over MCP
+  10. `step-10-skills-over-mcp`: Skills over MCP: a shared skill plus per-company skills
   11. `step-11-durable-objects`: per-user state (draft orders, rate limits) with Durable Objects
   12. `step-12-queues`: background bulk imports with Queues
   13. `step-13-cloudflare-workflows`: durable jobs with Cloudflare Workflows
   14. `step-14-tasks`: long-running work with Tasks, backed by the step 13 Workflow
   15. `step-15-events`: Events
-  16. `step-16-security-hardening`: threat model and hardening (tokens, least privilege, injection, secrets, audit)
+  16. `step-16-security-hardening`: threat model and hardening (tokens, least privilege, elicitation confirmations, injection, secrets, audit)
   17. `step-17-testing-and-observability`: tests in the Workers runtime, evals, logs and traces
   18. `step-18-deploy-and-test`: production deploy and cross-client testing
   19. `step-19-generative-ui-dashboard`: intent-driven sales dashboard (generative UI)
@@ -106,6 +106,8 @@ Multi-tenancy is a first-class theme of this course, because the servers learner
 - **Data.** Every business row carries `org_id`. Shared-tier companies use shared tables with row-level security, set per transaction (step 6); enterprise companies may get a dedicated Neon database behind the tenant router (step 7). Tools never know which tier they use, and migrations run across every tenant database.
 - **Names.** KV keys, Durable Object names, cache entries and log fields start with the company (`org:<orgId>:...`), built with the tenant helpers.
 - **Background work.** Every queue message, Workflow run, task and event carries the tenant envelope (`orgId`, `userId`, `requestId`), and the handler re-checks it before touching data.
+- **Skills and caching.** Per-company skills (step 10) are listed and served only to that company, and any list or read result that depends on the caller is returned with `cacheScope: "private"`, so no shared cache hands one company's answer to another.
+- **Confirmations.** An elicitation's `requestState` is sealed and bound to the company and user who started the call, and a retry from anyone else is refused.
 - **Per-company config, sign-in and billing.** Settings and limits are per company (cached in KV), SSO providers are linked to a company's organization, and plans and usage are counted per company (step 20).
 - **Proof.** From step 7, every step keeps a cross-tenant test suite passing, and every step README from step 8 on has a `Tenant isolation:` item in its submission checklist. A cross-tenant leak fails a step outright (see the rubric in `SUBMITTING.md`).
 
@@ -136,6 +138,8 @@ If a step's `package.json` defines different scripts, follow that file. When you
 - Return structured content alongside a short text summary.
 - Set tool annotations correctly (`readOnlyHint`, `destructiveHint`, etc.).
 - Return clear, recoverable errors rather than throwing opaque ones.
+- Ask before anything costly or irreversible. Destructive tools and actions that spend money confirm with the user through elicitation (form mode for a confirmation, URL mode for payment or anything sensitive), using the stateless `input_required` pattern with a `requestState` sealed by HMAC and bound to company, user, tool, arguments and an expiry, plus a plain two-call fallback for clients without elicitation (steps 16 and 20).
+- Follow the 2026-07-28 spec. Don't use what it removed (protocol sessions, the `initialize` handshake) or deprecated (Sampling, Roots, the Logging feature, the HTTP+SSE transport), even when older tutorials show them: use OpenTelemetry for logs and traces, and prefer Client ID Metadata Documents over Dynamic Client Registration. Prompts are still in the spec but rarely used, so teach skills (step 10) for reusable procedures and keep prompts to step 3.
 - Durable Objects, Queues and Workflows are part of the MCP server: define and bind them in the same Worker that serves `/mcp`, and drive them from MCP tools (and through Tasks from step 14). Never run long work inside a single tool call or keep state in memory. Pick the store or runtime by the job:
   - **Workers KV**: small, read-mostly data that can be up to a minute stale (the notes in steps 2 to 4, config, caches).
   - **D1**: auth data only.
@@ -221,6 +225,7 @@ This repo is a student assignment. Students **fork** it, work in their fork, and
 ## Useful references
 
 - MCP specification: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro
+- MCP 2026-07-28 key changes: https://modelcontextprotocol.io/specification/2026-07-28/changelog
 - MCP extensions overview: https://modelcontextprotocol.io/extensions/overview
 - Extensions client support matrix: https://modelcontextprotocol.io/extensions/client-matrix
 - MCP Apps: https://modelcontextprotocol.io/extensions/apps/overview

@@ -61,13 +61,13 @@ Every earlier step taught one technology on the same sales server, with the prom
 | Search by meaning | Core | Supplier terms, return rules and the product catalog searchable by meaning, citing document and line or abstaining, measured by a question set in CI | pgvector retrieval (8) |
 | Fast, slightly stale data | Extra | Supplier catalog and settings cached for quick lookups | Workers KV (2 to 4, 7) |
 | Screens in the chat | Core | Stock table, reorder form, purchase-order card and a KPI dashboard, chosen by the model from intent | MCP Apps + generative UI (9, 19) |
-| Know-how | Extra | A `weekly-reorder-review` skill that checks low stock, proposes orders and explains them | Skills over MCP (10) |
+| Know-how | Extra | A `weekly-reorder-review` skill that checks low stock, proposes orders and explains them, plus a per-company playbook (reorder rules and approvers) served only to that company | Skills over MCP (10) |
 | Consistent per-user state | Extra | A purchase-order draft built over several messages, and per-user rate limits | Durable Objects (11) |
 | Background work | Extra | Bulk import of a supplier price list or stock count from CSV, with failed rows reported | Queues (12) |
 | Multi-step job with waiting | Extra | Purchase-order approval: manager approves, the order is sent, the app waits for the delivery confirmation and sends reminders | Workflows (13) |
 | Long-running work, standard face | Extra | A month-end stock valuation report that clients can track | Tasks, backed by a Workflow (14) |
 | Telling the client when something happens | Extra | `stock.low`, `po.approved` and `delivery.received` events | Events (15) |
-| Safe against attack | Core | A threat model, token audience checks, least-privilege tools and an injection test on supplier and order notes | Security hardening (16) |
+| Safe against attack | Core | A threat model, token audience checks, least-privilege tools, elicitation confirmations before destructive actions, and an injection test on supplier and order notes | Security hardening (16) |
 | Proven and observable | Core | Unit and integration tests, an eval set for tool and screen choice, structured logs and traces | Testing, evals and observability (17) |
 | Production | Core | Staging and production environments, CI/CD and a release checklist with rollback | Deploy and test (18) |
 | A product you can sell | Core | Plans per company with usage limits, Stripe test-mode checkout, and a directory submission pack | Billing and distribution (20) |

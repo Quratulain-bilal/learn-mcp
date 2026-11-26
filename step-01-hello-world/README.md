@@ -17,6 +17,7 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 **Official docs.** Keep these open while you build:
 
 - [MCP specification (2026-07-28)](https://modelcontextprotocol.io/specification/2026-07-28). The protocol itself: hosts, clients, servers and messages.
+- [MCP: Key changes in 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog). Why the protocol is now stateless, and which older features (sessions, the `initialize` handshake, sampling) to ignore when a tutorial still shows them.
 - [MCP: Streamable HTTP transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http). How a remote server talks to clients at `/mcp`.
 - [MCP: Tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools). Tool names, descriptions and input schemas.
 - [MCP Inspector](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector). Testing your server before connecting a client.
@@ -54,8 +55,8 @@ A server with a single `greet` tool (and a second `get_time` tool to show more t
 - **Hosts, clients and servers**: Claude or ChatGPT is the host. It runs an MCP client that connects to our server.
 - **Transports**: Remote servers speak Streamable HTTP. Local servers usually use stdio.
 - **Tools**: Functions the model can call, each described by a name, a description and a JSON Schema for its inputs.
-- **Capabilities and initialization**: How client and server agree on what each supports when they connect.
-- **A stateless server**: We serve `/mcp` with Cloudflare's `createMcpHandler` and MCP SDK v2. Two things have different lifetimes here. The handler is created once, when the Worker starts. For every request, the handler calls your factory function, which builds a fresh MCP server, registers the tools and answers that one request. No protocol session is kept, which matches the current MCP spec and lets any copy of the Worker answer any request. Anything that must last between calls goes in a store (KV, D1, Neon or a Durable Object), never in memory.
+- **Capabilities on every request**: Since the 2026-07-28 spec there is no handshake when a client connects. Each request carries the protocol version and the client's capabilities in its `_meta`, and a client can ask the server what it supports with `server/discover`. New features, such as MCP Apps, Skills, Tasks and Events, arrive as optional *extensions* that both sides must declare.
+- **A stateless server**: We serve `/mcp` with Cloudflare's `createMcpHandler` and MCP SDK v2. Two things have different lifetimes here. The handler is created once, when the Worker starts. For every request, the handler calls your factory function, which builds a fresh MCP server, registers the tools and answers that one request. The MCP spec (2026-07-28) removed protocol sessions and the `Mcp-Session-Id` header altogether, so no session is kept and any copy of the Worker can answer any request, just like an ordinary web service behind a load balancer. Anything that must last between calls goes in a store (KV, D1, Neon or a Durable Object), never in memory.
 
 ## Planned outline
 

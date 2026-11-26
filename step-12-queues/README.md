@@ -45,6 +45,8 @@ Clients often arrive with data to load: a spreadsheet of last year's orders, a p
 
 A `bulk_import_orders` tool that accepts CSV data, validates its header, splits the rows into batches and puts them on an `order-imports` queue, then returns an import ID. The Worker's queue consumer inserts each batch into Neon for the signed-in user, keyed by import ID and row number so retries are safe. A `get_import_status` tool reports rows done, rows failed and why, read from an `imports` table in Neon.
 
+> **Looking ahead: file uploads.** In this step the CSV travels as text inside the tool call, so it passes through the model's context and has to stay small. MCP's [File Uploads extension](https://github.com/modelcontextprotocol/experimental-ext-file-uploads) is an experimental draft (November 2026) in which the server gives the client an upload target, typically a pre-signed URL, and the client sends the file there directly over HTTPS, so the bytes never pass through the model. Anthropic has said Claude will support it soon, first with a few launch partners. Keep this step's size limit, and note in NOTES.md how `bulk_import_orders` would change once clients support uploads, for example a pre-signed upload to Cloudflare R2 under an `org:<orgId>:` key.
+
 ## Key concepts
 
 - **Producer and consumer**: The tool sends messages, and the Worker's `queue()` handler processes them later.

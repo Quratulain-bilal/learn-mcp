@@ -10,7 +10,13 @@ Welcome, readers of [The AI Agent Factory](https://agentfactory.panaversity.org/
 
 MCP turns two! Anthropic released the Model Context Protocol in November 2024. What started as a way to connect AI apps to tools and data is now becoming the standard for how agents communicate and orchestrate work. MCP also standardizes interactive apps that render inside the chat, through the MCP Apps extension.
 
-Anthropic is bringing these agentic capabilities to Claude through MCP Apps, Skills over MCP, Tasks and more. In this repo we learn to build **remote MCP servers** that use these capabilities, one small, incremental step at a time.
+MCP's second year was about agents. The [2026-07-28 spec](https://modelcontextprotocol.io/specification/2026-07-28/changelog) made the protocol stateless, with no sessions, so a server runs behind any load balancer, and new features now arrive as optional extensions that clients adopt one at a time. On MCP's second birthday (November 24, 2026), Anthropic made Tasks and Elicitation generally available in Claude, put Skills over MCP into public beta, and announced file uploads. In this repo we learn to build **remote MCP servers** that use these capabilities, one small, incremental step at a time.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/diagram-mcp-timeline-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/diagram-mcp-timeline-light.png">
+  <img src="assets/diagram-mcp-timeline-light.png" alt="Two years of MCP: spec releases from 2024-11-05 to 2026-07-28, project milestones, and the official extensions MCP Apps, Enterprise-Managed Authorization, Skills over MCP beta and Events beta. This course targets spec 2026-07-28." width="100%">
+</picture>
 
 Our north star is **Generative UI + MCP**: AI-native apps built around intent rather than navigation. The model decides what interface to show at runtime, and MCP supplies the tools, data and context behind it. MCP Apps is the open standard that carries that UI into the chat, in both Claude and ChatGPT. ([Generative UI + MCP: The New Stack for AI-Native Applications](https://odsc.medium.com/generative-ui-mcp-the-new-stack-for-ai-native-applications-b62af183f2aa), ODSC, 2026)
 
@@ -122,13 +128,13 @@ Each step lives in its own numbered directory and builds on the one before it. E
 | 7 | [`step-07-multi-tenancy/`](step-07-multi-tenancy/) | Multi-tenant MCP servers and databases: isolation models, tenant context in every call, shared and dedicated databases, and cross-tenant tests | 🚧 Under development |
 | 8 | [`step-08-semantic-search-pgvector/`](step-08-semantic-search-pgvector/) | Search by meaning with pgvector: tenant-scoped retrieval on Neon, answers that cite or abstain, and a question set in CI | 🚧 Under development |
 | 9 | [`step-09-generative-ui-mcp-apps/`](step-09-generative-ui-mcp-apps/) | Generative UI with MCP Apps: fixed React widgets that tools return, with the model selecting which one to show | 🚧 Under development |
-| 10 | [`step-10-skills-over-mcp/`](step-10-skills-over-mcp/) | Skills over MCP | 🚧 Under development |
+| 10 | [`step-10-skills-over-mcp/`](step-10-skills-over-mcp/) | Skills over MCP: a shared playbook plus skills built for each company, served from your signed-in server | 🚧 Under development |
 | 11 | [`step-11-durable-objects/`](step-11-durable-objects/) | Per-user state with Durable Objects: draft orders and rate limits that stay consistent | 🚧 Under development |
 | 12 | [`step-12-queues/`](step-12-queues/) | Background work with Queues: bulk imports processed in batches, with retries | 🚧 Under development |
 | 13 | [`step-13-cloudflare-workflows/`](step-13-cloudflare-workflows/) | Durable jobs with Cloudflare Workflows: multi-step, retryable work that a tool starts and the model checks on | 🚧 Under development |
 | 14 | [`step-14-tasks/`](step-14-tasks/) | Long-running work with Tasks | 🚧 Under development |
 | 15 | [`step-15-events/`](step-15-events/) | Events | 🚧 Under development |
-| 16 | [`step-16-security-hardening/`](step-16-security-hardening/) | Security hardening: threat model, token audience, least-privilege tools, prompt injection, secrets and audit | 🚧 Under development |
+| 16 | [`step-16-security-hardening/`](step-16-security-hardening/) | Security hardening: threat model, token audience, least-privilege tools, elicitation confirmations, prompt injection, secrets and audit | 🚧 Under development |
 | 17 | [`step-17-testing-and-observability/`](step-17-testing-and-observability/) | Testing, evals and observability: tests in the Workers runtime, a tool-selection eval set, logs and traces | 🚧 Under development |
 | 18 | [`step-18-deploy-and-test/`](step-18-deploy-and-test/) | Deploying and testing on claude.ai, Claude Desktop and ChatGPT | 🚧 Under development |
 | 19 | [`step-19-generative-ui-dashboard/`](step-19-generative-ui-dashboard/) | Generative UI: an intent-driven dashboard, where the model composes a screen from approved widgets and fills it with Neon data | 🚧 Under development |
@@ -137,7 +143,7 @@ Each step lives in its own numbered directory and builds on the one before it. E
 
 ### Milestones and pacing
 
-The 21 steps fall into six milestones. Times are rough estimates for a learner working with Claude Code, including reading the linked lessons. Steps 10, 14 and 15 are lighter, because they teach extensions whose client support is still rolling out; build them anyway, with the plain-tool fallback each step describes.
+The 21 steps fall into six milestones. Times are rough estimates for a learner working with Claude Code, including reading the linked lessons. Steps 10, 14 and 15 are lighter, because they teach extensions that clients are still adopting (Claude now supports Tasks and, in beta, Skills over MCP, while Events is still rolling out); build them anyway, with the plain-tool fallback each step describes.
 
 | Milestone | Steps | Estimated time | What you can do at the end |
 | --- | --- | --- | --- |
@@ -167,6 +173,7 @@ The repo is hands-on preparation, not a copy of the exam. Use the official CCDV-
 | Building remote MCP servers and connecting them to Claude | Direct | 1, 18 |
 | Designing tools, resources and prompts the model uses well | Direct | 2, 3, 19 |
 | Securing a server: OAuth, roles, token audience, prompt injection | Direct | 4, 6, 16 |
+| Asking the user with elicitation before costly or irreversible actions | Direct | 14, 16, 20 |
 | Multi-tenant servers and databases, with row-level security | Supporting | 4 to 7, then every later step |
 | Working with business data safely | Supporting | 5, 6, 7 |
 | Retrieval: search by meaning, citations, abstaining and measuring | Direct | 8 |
@@ -207,7 +214,7 @@ We use the three kinds of screen from book lesson [20.10 Screens the AI designs]
 The book teaches the ideas, and these official docs are the reference for the exact APIs. Each step's **Learn first** section also links the specific doc pages it needs.
 
 **MCP**
-- [Getting started](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) and the [specification](https://modelcontextprotocol.io/specification/2026-07-28) (version 2026-07-28)
+- [Getting started](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro), the [specification](https://modelcontextprotocol.io/specification/2026-07-28) (version 2026-07-28) and its [key changes](https://modelcontextprotocol.io/specification/2026-07-28/changelog)
 - [Extensions overview](https://modelcontextprotocol.io/extensions/overview) and [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix)
 - [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview), [Authorization extension](https://modelcontextprotocol.io/extensions/auth/overview), [Skills over MCP](https://modelcontextprotocol.io/extensions/skills/overview), [Tasks](https://modelcontextprotocol.io/extensions/tasks/overview) and [Events](https://modelcontextprotocol.io/extensions/events/overview)
 - [MCP Inspector](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector)

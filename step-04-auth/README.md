@@ -14,13 +14,15 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 - [18.7 Permission per tool](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/permission-per-tool/). Scopes per tool, 403 responses and step-up.
 - [18.9 What a tenant is](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
 - [Field guide F3, Better Auth from zero](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/field-guide-securing-connectors/#f3-better-auth-from-zero). Read F2 for D1 as well. Its "Going further: sign in with your company (SSO)" section explains how SSO and the connector's sign-in work together.
+- *Optional:* [20.14 Employees through their company](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/employees-through-their-company/). Enterprise-Managed Authorization: the company's identity provider decides which employees may use a connector, so nobody clicks a consent screen.
 
 **Official docs.** Keep these open while you build:
 
 - [MCP: Authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). The OAuth rules every remote MCP server follows.
 - [MCP: Authorization server discovery](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery). The metadata clients look for after a 401.
-- [MCP: Client registration](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration). How Claude and ChatGPT register with your auth server.
-- [MCP: Authorization extension](https://modelcontextprotocol.io/extensions/auth/overview). What the extension adds on top of the core spec.
+- [MCP: Client registration](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration). How Claude and ChatGPT register with your auth server. Client ID Metadata Documents are now the preferred way; Dynamic Client Registration is deprecated in this spec version but still allowed for older clients.
+- [MCP: Authorization extensions](https://modelcontextprotocol.io/extensions/auth/overview). What the official extensions add on top of the core spec: client credentials for machines, and Enterprise-Managed Authorization for companies.
+- [MCP: Enterprise-Managed Authorization](https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization). How a company's identity provider (such as Okta) authorizes your server once for all its staff.
 - [Better Auth: MCP plugin](https://better-auth.com/docs/plugins/mcp). Better Auth's support for MCP servers.
 - [Better Auth: OAuth provider plugin](https://better-auth.com/docs/plugins/oauth-provider). Turning Better Auth into the OAuth server clients sign in to.
 - [Better Auth: SSO plugin](https://better-auth.com/docs/plugins/sso). Signing people in with their company's identity provider over OIDC or SAML.
@@ -48,7 +50,7 @@ Real servers act on behalf of real users. Claude and ChatGPT both support OAuth 
 - Read the authenticated user inside a tool handler
 - Apply per-user authorization rules to tools
 - Put every user in a company (a tenant) with a role, using Better Auth's organization plugin, so later steps can keep each company's data apart
-- Know what the MCP authorization extension adds on top of the core spec
+- Know what the MCP authorization extensions add on top of the core spec, including Enterprise-Managed Authorization, where an admin authorizes the server once for the whole company
 - Optionally, let a client company sign in with its own identity provider through Better Auth's SSO plugin
 
 ## What you will build
@@ -64,6 +66,8 @@ The notes server from steps 2 and 3, now behind sign-in. Every user belongs to a
 - **Tenant**: A customer company. One server serves many tenants, and no tenant ever sees another's people or data.
 - **Role**: What a member may do inside their company, such as `member` or `admin`, checked by the server on every call.
 - **Single sign-on (SSO)**: Signing in with the account a person's company already manages, over OIDC or SAML. It proves who they are, and your server still decides what they may do.
+- **Enterprise-Managed Authorization**: An official, stable MCP extension, built with Okta and others, for a world where agents run without someone clicking a consent button. The company's identity provider gives the AI app a pass (an ID-JAG) that your auth server trades for an ordinary token, so an admin decides once which employees may use the server.
+- **Client registration**: How an AI app identifies itself to your auth server. The 2026-07-28 spec prefers Client ID Metadata Documents (the client's ID is a URL to its own description) over Dynamic Client Registration.
 
 ## Planned outline
 
@@ -108,7 +112,7 @@ Tell me the Wrangler commands to create a D1 database for auth, then add the bin
 **4. Configure Better Auth.**
 
 ```text
-Set up Better Auth in the Worker with the D1 database, and enable what an MCP server needs to act as an OAuth-protected resource, including the discovery metadata clients look for. Add the organization plugin so every user belongs to a company with a role (member or admin), and create a personal company on a user's first sign-in. Explain each config option you set.
+Set up Better Auth in the Worker with the D1 database, and enable what an MCP server needs to act as an OAuth-protected resource, including the discovery metadata clients look for. Add the organization plugin so every user belongs to a company with a role (member or admin), and create a personal company on a user's first sign-in. Explain each config option you set. For client registration, support Client ID Metadata Documents if Better Auth does, keep Dynamic Client Registration only as the fallback the spec still allows, and tell me which one Claude and ChatGPT use when they connect.
 ```
 
 **5. Protect the MCP endpoint.**
@@ -138,7 +142,7 @@ Review the auth setup for security issues: token validation, redirect URIs, secr
 **9. Optional: add single sign-on for a client company.** You'll need a test identity provider, such as a free Okta developer account or Microsoft Entra ID.
 
 ```text
-Read Better Auth's SSO plugin docs and the "sign in with your company (SSO)" section of the book's field guide F3. Add the @better-auth/sso plugin so a company can register its own OIDC (or SAML) identity provider and its staff sign in with their company accounts when they connect the server from Claude or ChatGPT. Keep our own rules for what each signed-in user may do, and explain how SSO and the connector's OAuth sign-in fit together.
+Read Better Auth's SSO plugin docs and the "sign in with your company (SSO)" section of the book's field guide F3. Add the @better-auth/sso plugin so a company can register its own OIDC (or SAML) identity provider and its staff sign in with their company accounts when they connect the server from Claude or ChatGPT. Keep our own rules for what each signed-in user may do, and explain how SSO and the connector's OAuth sign-in fit together. Then read the Enterprise-Managed Authorization docs linked in this step and write in NOTES.md how it differs from SSO, and what our auth server would need to accept an ID-JAG: check it against the identity provider's published keys, issuer, audience and expiry, map its subject (and email, for existing accounts) to a user and company, then issue our own token. Check whether Better Auth supports it yet, and build it only if it does.
 ```
 
 ## Testing targets
@@ -161,7 +165,8 @@ Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ D
 
 ## References
 
-- [MCP: Authorization extension](https://modelcontextprotocol.io/extensions/auth/overview)
+- [MCP: Authorization extensions](https://modelcontextprotocol.io/extensions/auth/overview)
+- [MCP: Enterprise-Managed Authorization](https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization)
 - [Better Auth](https://better-auth.com/docs)
 - [Cloudflare D1](https://developers.cloudflare.com/d1/)
 
