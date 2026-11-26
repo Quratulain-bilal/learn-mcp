@@ -89,4 +89,14 @@ npx wrangler secret put NEON_DATABASE_URL
 npm run deploy
 ```
 
-The live Neon connection string is intentionally not committed. The automated tests use a deterministic in-memory sales store, so they check authentication, tenant scoping, tool registration and fixed SQL use without requiring live credentials. Live migration, seeding, deployment and Claude/ChatGPT checks are pending until a Neon connection string is supplied.
+The live Neon connection string is intentionally not committed. The automated tests use a deterministic in-memory sales store, so they check authentication, tenant scoping, tool registration and fixed SQL use without requiring live credentials.
+
+## Live verification
+
+- Migration applied all three SQL files to the `step-05` Neon branch: 12 staging rows, 4 customers, 3 categories, 6 products, 11 orders and 14 order items.
+- The remote auth D1 database was migrated with the protected `/__migrate` endpoint. The demo sales rows were seeded into `org-5bc01fd0-e02f-4abe-a97c-f973822ad1bc`.
+- The Worker is deployed at `https://learn-mcp-step-05.learn-mcp-step-01.workers.dev`, and the protected MCP endpoint is `https://learn-mcp-step-05.learn-mcp-step-01.workers.dev/mcp`.
+- A full live OAuth flow with dynamic client registration, PKCE, consent and token exchange returned 200. MCP `initialize`, `tools/list`, `describe_schema`, `answer_business_question` and `compare_designs` all returned 200 with seeded tenant data.
+- The demo sign-in email for this live check is `learner-step05@example.com`; the password was shared separately and is intentionally not stored in this file.
+
+Two Cloudflare CLI details mattered in this fork: `wrangler secret put --env-file .dev.vars` uploaded empty values, so secrets were set by piping the values from `.dev.vars` instead. When `BETTER_AUTH_SECRET` changed after JWKS rows had already been created, the token endpoint returned 500 until the `jwks` table was cleared and Better Auth generated fresh keys.

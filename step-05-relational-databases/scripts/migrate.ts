@@ -37,8 +37,14 @@ for (const file of files) {
     console.log(`skip ${file}`);
     continue;
   }
-  const statement = await readFile(path.join(migrationsDir, file), "utf8");
-  await sql.query(statement);
+  const migration = await readFile(path.join(migrationsDir, file), "utf8");
+  const statements = migration
+    .split(";")
+    .map((statement) => statement.trim())
+    .filter((statement) => statement.length > 0);
+  for (const statement of statements) {
+    await sql.query(statement);
+  }
   await sql.query("INSERT INTO schema_migrations (name) VALUES ($1)", [file]);
   console.log(`applied ${file}`);
 }
