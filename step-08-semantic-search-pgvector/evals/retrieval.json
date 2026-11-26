@@ -1,0 +1,24 @@
+[
+  {
+    "org": "shared",
+    "questions": [
+      { "question": "Can I give a repeat customer a discount?", "expect": { "documentId": "discount-policy", "line": 1 } },
+      { "question": "What is the highest discount an admin may approve?", "expect": { "documentId": "discount-policy", "line": 3 } },
+      { "question": "Can a first-time buyer get a discount?", "expect": { "documentId": "discount-policy", "line": 2 } },
+      { "question": "How long can a customer return an opened item?", "expect": { "documentId": "returns-policy", "line": 1 } },
+      { "question": "When must a new customer pay?", "expect": { "documentId": "credit-policy", "line": 2 } },
+      { "question": "What is our cold storage rental policy?", "expect": "abstain" }
+    ]
+  },
+  {
+    "org": "enterprise",
+    "questions": [
+      { "question": "What is the biggest discount available here?", "expect": { "documentId": "discount-policy", "line": 3 } },
+      { "question": "Can a new customer get any discount?", "expect": { "documentId": "discount-policy", "line": 2 } },
+      { "question": "What discount does a repeat customer receive?", "expect": { "documentId": "discount-policy", "line": 1 } },
+      { "question": "How many days are sealed returns allowed?", "expect": { "documentId": "returns-policy", "line": 2 } },
+      { "question": "What are payment terms for approved business customers?", "expect": { "documentId": "credit-policy", "line": 1 } },
+      { "question": "Do we repair bicycles?", "expect": "abstain" }
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "learn-mcp-step-08",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-07-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": true,
+	"d1_databases": [
+		{
+			"binding": "AUTH_DB",
+			"database_name": "learn-mcp-step-08-auth",
+			"database_id": "3a709107-3bd2-4f64-a1ea-dcb9a617be72"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SETTINGS_KV",
+			"id": "c6fc6dae50e542bf87abad4a5210efa8"
+		}
+	],
+	"ai": {
+		"binding": "AI"
+	},
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "9c26ec5254ff4704abf1eced81b58353"
+		}
+	]
+}

@@ -1,0 +1,13 @@
+# Local-only secrets go here (copy to .dev.vars). Never commit .dev.vars.
+BETTER_AUTH_SECRET=replace-with-a-long-random-secret
+MIGRATION_TOKEN=replace-with-a-random-migration-token
+NEON_DATABASE_URL=postgresql://user:password@ep-example.neon.tech/learn_mcp?sslmode=require
+NEON_CONNECTOR_DATABASE_URL=postgresql://connector:password@ep-example.neon.tech/learn_mcp?sslmode=require
+ENTERPRISE_NEON_DATABASE_URL=postgresql://user:password@ep-example.neon.tech/learn_mcp_enterprise?sslmode=require
+ENTERPRISE_NEON_CONNECTOR_DATABASE_URL=postgresql://connector:password@ep-example.neon.tech/learn_mcp_enterprise?sslmode=require
+SHARED_ORG_ID=org-replace-with-shared-company-id
+ENTERPRISE_ORG_ID=org-replace-with-enterprise-company-id
+EMBED_URL=https://learn-mcp-step-08.example.workers.dev
+EVAL_URL=https://learn-mcp-step-08.example.workers.dev
+EMBEDDING_MODE=ai
+RETRIEVAL_THRESHOLD=0.60
