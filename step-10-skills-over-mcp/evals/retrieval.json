@@ -1,0 +1,22 @@
+{
+  "about": "Twelve questions, six per company: five the policies answer (expected document and line) and one they don't (abstain). Lines are line numbers in policies/<set>/<document>.md.",
+  "companies": {
+    "harbor": "Harbor Office Supply (org demo): discounts up to 15% without approval",
+    "summit": "Summit Workspace (org summit-demo): discounts up to 10% without approval"
+  },
+  "questions": [
+    { "company": "harbor", "question": "Can I knock 12% off an order without asking anyone?", "expect": { "document": "discounts", "line": 3 } },
+    { "company": "harbor", "question": "A customer wants 20% off. Who has to sign that off?", "expect": { "document": "discounts", "line": 4 } },
+    { "company": "harbor", "question": "The customer opened the box but wants to send it back after a week. Can they?", "expect": { "document": "returns", "line": 4 } },
+    { "company": "harbor", "question": "How long do business clients get to pay their invoices?", "expect": { "document": "credit-terms", "line": 3 } },
+    { "company": "harbor", "question": "Is there anything special for someone buying from us for the first time?", "expect": { "document": "discounts", "line": 5 } },
+    { "company": "harbor", "question": "What is the dress code for the office on Fridays?", "expect": "abstain" },
+
+    { "company": "summit", "question": "What's the most I can discount an order without getting approval?", "expect": { "document": "discounts", "line": 3 } },
+    { "company": "summit", "question": "We shipped the wrong item. Who pays to send it back?", "expect": { "document": "returns", "line": 6 } },
+    { "company": "summit", "question": "Do government agencies get a discount?", "expect": { "document": "discounts", "line": 7 } },
+    { "company": "summit", "question": "What happens when a client hasn't paid for over a month?", "expect": { "document": "credit-terms", "line": 6 } },
+    { "company": "summit", "question": "Can a customer return something that was engraved for them?", "expect": { "document": "returns", "line": 5 } },
+    { "company": "summit", "question": "How many vacation days do employees get per year?", "expect": "abstain" }
+  ]
+}
