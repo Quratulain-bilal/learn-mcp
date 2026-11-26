@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "learn-mcp-step-05",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "learn-mcp-step-05-auth",
+      "database_id": "ed0ff080-0004-4f54-a8ee-f83b05f506be"
+    }
+  ]
+}
