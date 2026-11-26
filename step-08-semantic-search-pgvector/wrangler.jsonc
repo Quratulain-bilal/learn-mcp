@@ -27,6 +27,10 @@
 		{
 			"binding": "HYPERDRIVE",
 			"id": "9c26ec5254ff4704abf1eced81b58353"
+		},
+		{
+			"binding": "ENTERPRISE_HYPERDRIVE",
+			"id": "6a50544b0b6041809c4ea665b4df8b88"
 		}
 	]
 }
