@@ -1,0 +1,42 @@
+[
+  {
+    "org": "shared",
+    "documents": [
+      {
+        "documentId": "discount-policy",
+        "title": "Discount policy",
+        "content": "1. Repeat customers receive a 5 percent discount on standard items.\n2. New customers do not receive a discount.\n3. The maximum approved discount is 10 percent and requires admin approval."
+      },
+      {
+        "documentId": "returns-policy",
+        "title": "Returns policy",
+        "content": "1. Opened items may be returned within 14 days with the original receipt.\n2. Sealed items may be returned within 30 days.\n3. Refunds are sent to the original payment method."
+      },
+      {
+        "documentId": "credit-policy",
+        "title": "Credit terms",
+        "content": "1. Approved business customers have net 30 payment terms.\n2. New customers must pay at the time of purchase.\n3. Credit above 5000 requires admin approval."
+      }
+    ]
+  },
+  {
+    "org": "enterprise",
+    "documents": [
+      {
+        "documentId": "discount-policy",
+        "title": "Discount policy",
+        "content": "1. Repeat customers receive a 2 percent discount on standard items.\n2. New customers may receive a 2 percent introductory discount.\n3. The maximum approved discount is 5 percent and requires admin approval."
+      },
+      {
+        "documentId": "returns-policy",
+        "title": "Returns policy",
+        "content": "1. Opened items may be returned within 7 days with the original receipt.\n2. Sealed items may be returned within 14 days.\n3. Refunds are sent to the original payment method."
+      },
+      {
+        "documentId": "credit-policy",
+        "title": "Credit terms",
+        "content": "1. Approved business customers have net 15 payment terms.\n2. New customers must pay at the time of purchase.\n3. Credit above 2000 requires admin approval."
+      }
+    ]
+  }
+]

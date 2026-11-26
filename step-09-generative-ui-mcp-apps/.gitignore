@@ -1,0 +1,2 @@
+# Build output (npm run build:widgets)
+src/widgets/generated.ts

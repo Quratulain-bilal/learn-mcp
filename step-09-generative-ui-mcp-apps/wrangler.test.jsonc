@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "learn-mcp-step-08-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "learn-mcp-step-08-auth",
+      "database_id": "3a709107-3bd2-4f64-a1ea-dcb9a617be72"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SETTINGS_KV"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  }
+}

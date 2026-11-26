@@ -1,0 +1,50 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Each course step deploys as its own Worker so earlier steps stay live while graded.
+  "name": "learn-mcp-step-09",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  // The agents, MCP SDK and Better Auth packages use a few Node.js APIs.
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  // Business data lives in Neon Postgres, reached through Hyperdrive (pooled connections).
+  // The Hyperdrive config holds the connection string for the least-privilege role
+  // mcp_connector, so the secret lives in Cloudflare, not here. Create it once with
+  //   npm run hyperdrive:create
+  // and paste the id it prints below. Query caching is OFF for this config: a cache that
+  // can't see app.tenant_id could hand one company another company's rows (lesson 19.9).
+  // Locally, `wrangler dev` and the tests use the connection string in .env instead
+  // (CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE).
+  // Step 9 changes no tables, so it shares step 8's databases and Hyperdrive configs
+  // (fewer configs on the free plan). Its KV cache is its own.
+  "hyperdrive": [
+    // The SHARED database: every shared-tier company, plus the tenants table that says
+    // where each company lives.
+    { "binding": "HYPERDRIVE", "id": "66ae90ecb37b46edb9e199472b584ef3" },
+    // One DEDICATED database per enterprise company (TENANCY.md). Its binding name is
+    // stored in the tenants table. `npm run tenant:dedicate` creates the database.
+    { "binding": "TENANT_DB_ENTERPRISE", "id": "66ae90ecb37b46edb9e199472b584ef3" }
+  ],
+  // Workers AI, for embeddings (bge-m3). Always runs on Cloudflare, even in wrangler dev,
+  // and counts against the free daily allowance.
+  "ai": { "binding": "AI", "remote": true },
+  // "workers-ai" = the real model. Tests set EMBEDDINGS to "test" (see vitest.config.ts).
+  "vars": { "EMBEDDINGS": "workers-ai" },
+  // Per-company caches (settings, placement), always under org:<orgId>:... keys.
+  // Created by the first `wrangler deploy` (automatic provisioning); its id is pinned here
+  // so later deploys reuse it. In your own fork, delete the id and deploy once to get yours.
+  "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "8ef265ceb3c74e71b67e08ce47b3c2e7" }],
+  // D1 holds ONLY auth data: users, sessions, companies (organizations), members and
+  // OAuth clients/tokens. Apply the schema with:
+  //   npx wrangler d1 migrations apply learn-mcp-auth --local   (local)
+  //   npx wrangler d1 migrations apply learn-mcp-auth --remote  (after deploying)
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "learn-mcp-step-09-auth",
+      "database_id": "206d4e5f-c90b-4d03-bd63-9c41a5532e16",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
