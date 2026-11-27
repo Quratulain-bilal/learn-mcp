@@ -1,0 +1,12 @@
+{
+  "@cf/baai/bge-m3": {
+    "threshold": 0.52,
+    "foundInTop3": 1,
+    "correctAbstentions": 1
+  },
+  "test-hash-v1": {
+    "threshold": 0.2,
+    "foundInTop3": 0.6,
+    "correctAbstentions": 1
+  }
+}
