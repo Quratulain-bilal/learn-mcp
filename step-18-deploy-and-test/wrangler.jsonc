@@ -6,10 +6,9 @@
   //   production  `npm run deploy:production`: this top-level config, deployed as learn-mcp-step-18
   //   staging     `npm run deploy:staging`: env.staging below, deployed as learn-mcp-step-18-staging
   //
-  // Bindings are NOT inherited by an environment, so env.staging repeats every one of them,
-  // pointing at STAGING's own resources: its own D1 (sign-in data), Neon databases
-  // (through its own Hyperdrive configs), KV, queues, Workflow and Durable Objects.
-  // Nothing is shared between staging and production: no users, tenants, settings or data.
+  // Bindings are NOT inherited by an environment, so env.staging repeats every one of them.
+  // KV, queues and Workflow are separate per environment; D1 and Hyperdrive are reused here
+  // because no new Neon/D1 resources were created, so auth and business data are shared.
   "name": "learn-mcp-step-18",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-22",
@@ -32,10 +31,10 @@
 
   "vars": { "EMBEDDINGS": "workers-ai", "ENVIRONMENT": "production" },
   "ai": { "binding": "AI", "remote": true },
-  // PRODUCTION data: the step 8 databases (shared tier + dedicated enterprise tier).
+  // PRODUCTION data: reused Hyperdrive config for the step 8 databases.
   "hyperdrive": [
-    { "binding": "HYPERDRIVE", "id": "2be047466cc74e8b8479e7aa3deaeb83" },
-    { "binding": "TENANT_DB_ENTERPRISE", "id": "888780cb6e784823a7447d4defb6bb53" }
+    { "binding": "HYPERDRIVE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" },
+    { "binding": "TENANT_DB_ENTERPRISE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" }
   ],
   "durable_objects": { "bindings": [{ "name": "USER_STATE", "class_name": "UserState" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UserState"] }],
@@ -51,9 +50,9 @@
   },
   "workflows": [{ "name": "learn-mcp-step-18-sales-report", "binding": "SALES_REPORT", "class_name": "SalesReportWorkflow" }],
   // Created by the first deploy (automatic provisioning), then pinned.
-  "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "4b97a6e9b8b741ca82dff74942dcdd0a" }],
+  "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "5006c033fb2b4ba5ac2ee1d45766645e" }],
   "d1_databases": [
-    { "binding": "AUTH_DB", "database_name": "learn-mcp-auth", "database_id": "01b7788b-f97f-4970-9032-3d2448e8889a", "migrations_dir": "migrations" }
+    { "binding": "AUTH_DB", "database_name": "learn-mcp-step-13-auth", "database_id": "5243b652-7a02-4275-a566-8c4519bd0a59", "migrations_dir": "migrations" }
   ],
 
   "env": {
@@ -61,10 +60,10 @@
       // Deployed as learn-mcp-step-18-staging (wrangler adds the environment name).
       "vars": { "EMBEDDINGS": "workers-ai", "ENVIRONMENT": "staging" },
       "ai": { "binding": "AI", "remote": true },
-      // STAGING data: step18_staging and step18_staging_enterprise on the Neon branch.
+      // STAGING data: same Hyperdrive config as production; no separate Neon branch here.
       "hyperdrive": [
-        { "binding": "HYPERDRIVE", "id": "d6bc9e4dac43463297cd98df2b084fb9" },
-        { "binding": "TENANT_DB_ENTERPRISE", "id": "6e7fd2000a1c4d7580534e2b4b415db5" }
+        { "binding": "HYPERDRIVE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" },
+        { "binding": "TENANT_DB_ENTERPRISE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" }
       ],
       "durable_objects": { "bindings": [{ "name": "USER_STATE", "class_name": "UserState" }] },
       "queues": {
@@ -78,9 +77,9 @@
         ]
       },
       "workflows": [{ "name": "learn-mcp-step-18-staging-sales-report", "binding": "SALES_REPORT", "class_name": "SalesReportWorkflow" }],
-      "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "688fd56594554baa8b65229618e8dbfc" }],
+      "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "8690e3bfbdd646c4a285554dbdc79447" }],
       "d1_databases": [
-        { "binding": "AUTH_DB", "database_name": "learn-mcp-auth-staging", "database_id": "7118e282-901a-40e2-90bc-051fbdbda6d4", "migrations_dir": "migrations" }
+        { "binding": "AUTH_DB", "database_name": "learn-mcp-step-13-auth", "database_id": "5243b652-7a02-4275-a566-8c4519bd0a59", "migrations_dir": "migrations" }
       ]
     }
   }

@@ -13,7 +13,7 @@ Every change reaches production the same way: **tests → staging → manual app
 ## 2. Staging
 
 - [ ] Merge to `main`: CI runs the tests (against the staging databases when `STAGING_DOTENV` is set, **including the cross-tenant suite**) and deploys staging. Or by hand: `npm run deploy:staging`.
-- [ ] `curl https://learn-mcp-step-18-staging.awaismudasir10.workers.dev/version` shows the new release.
+- [ ] `curl https://learn-mcp-step-18-staging.learn-mcp-step-01.workers.dev/version` shows the new release.
 - [ ] Run **TEST-PLAN.md** on staging (at least sections 2, 3, 4 and 6 in claude.ai).
 
 ## 3. Production
@@ -52,10 +52,9 @@ npx wrangler rollback <version-id> -m "why" # to a specific version
 
 A rollback changes **code only**. Database migrations stay, which is why they must be additive. Secrets and bindings stay. After rolling back, check `/version` and run TEST-PLAN section 7.
 
-## Practice rollback (done for step 18)
+## Practice rollback (not yet done)
 
-On staging:
-1. Changed `RELEASE` to `1.0.1` and deployed (`npm run deploy:staging`). `/version` showed `{"release":"1.0.1","environment":"staging"}`.
-2. Ran `npx wrangler rollback --env staging -y -m "practice rollback: 1.0.1 -> 1.0.0"`. Wrangler found the latest stable version and moved 100% of traffic to it.
-3. Within seconds `/version` showed `{"release":"1.0.0","environment":"staging"}`.
-4. Set `RELEASE` back to `1.0.0` in the code, so the code matches what is running.
+On staging, rehearse it before a production release:
+1. Bump `RELEASE` to `1.0.1`, deploy with `npm run deploy:staging`, and confirm `/version`.
+2. Run `npx wrangler rollback --env staging -y -m "practice rollback: 1.0.1 -> 1.0.0"` and confirm `/version` returns `1.0.0`.
+3. Set `RELEASE` back to `1.0.0` in the code, so the code matches what is running.

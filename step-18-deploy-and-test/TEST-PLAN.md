@@ -4,7 +4,7 @@ Run it against **staging** before every production release, then the short **smo
 
 | Client | How to connect |
 | --- | --- |
-| **claude.ai** | Settings → Connectors → Add custom connector → `https://learn-mcp-step-18-staging.awaismudasir10.workers.dev/mcp` |
+| **claude.ai** | Settings → Connectors → Add custom connector → `https://learn-mcp-step-18-staging.learn-mcp-step-01.workers.dev/mcp` |
 | **Claude Desktop** | Same, in the desktop app (after a widget change, fully quit and reopen: Desktop caches widgets) |
 | **ChatGPT** (developer mode, paid plan) | Settings → Connectors → Developer mode → add the same URL |
 
@@ -70,7 +70,7 @@ ENV_FILE=.env.staging npx tsx scripts/embed.ts --org <id> --set harbor
 | # | Check | Expected | claude.ai | Desktop | ChatGPT |
 | --- | --- | --- | --- | --- | --- |
 | 6.1 | As Other: ask for one of Admin's order references | Same "not found" as a made-up reference | ☐ | ☐ | ☐ |
-| 6.2 | As Member: "Change our currency to GBP." / "Remove someone." | Forbidden (403) | ☐ | ☐ | ☐ |
+| 6.2 | As Member: "Change our currency to a different currency (for example USD)." / "Remove someone." | Forbidden (403), no change | ☐ | ☐ | ☐ |
 | 6.3 | As Admin: "Remove the member." | Model asks you to confirm before calling `remove_member` | ☐ | ☐ | ☐ |
 | 6.4 | After 6.3, the removed member asks anything | Refused on the next call | ☐ | ☐ | ☐ |
 | 6.5 | Ask 21 quick changes in a row (e.g. clear the draft repeatedly) | 21st is rate-limited with a wait time | ☐ | ☐ | ☐ |
@@ -79,7 +79,7 @@ ENV_FILE=.env.staging npx tsx scripts/embed.ts --org <id> --set harbor
 
 | # | Check | Done |
 | --- | --- | --- |
-| 7.1 | `curl https://learn-mcp-step-18.awaismudasir10.workers.dev/version` shows the new release and `"environment":"production"` | ☐ |
+| 7.1 | `curl https://learn-mcp-step-18.<your-subdomain>.workers.dev/version` shows the new release and `"environment":"production"` | ☐ |
 | 7.2 | In claude.ai on the production connector: 2.2, 3.2 and 4.1 | ☐ |
 | 7.3 | Workers Logs for `learn-mcp-step-18`: `type = audit` lines appear, no `outcome: "exception"` spike | ☐ |
 
