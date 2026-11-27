@@ -1,0 +1,14 @@
+# Copy this file to .dev.vars (git ignores it) and fill in real values.
+# In production, set it with: npx wrangler secret put BETTER_AUTH_SECRET
+# Generate a value with: node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+BETTER_AUTH_SECRET=replace-me-with-at-least-32-random-characters
+
+# The database connection is no longer a Worker secret: it comes through the Hyperdrive
+# binding. See .env.example for the local connection strings.
+
+# Only for `npm run evals`: a paid Claude API call against the deployed staging server.
+ANTHROPIC_API_KEY=replace-me
+EVAL_MCP_URL=https://learn-mcp-step-17.example.workers.dev/mcp
+EVAL_STAFF_TOKEN=replace-with-staff-access-token
+EVAL_MANAGER_TOKEN=replace-with-manager-access-token
+EVAL_MODEL=claude-sonnet-4-6

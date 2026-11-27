@@ -1,0 +1,99 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Each course step deploys as its own Worker so earlier steps stay live while graded.
+  "name": "learn-mcp-step-17",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  // The agents, MCP SDK and Better Auth packages use a few Node.js APIs.
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  // Workers Logs (every console line, as searchable JSON) and automatic traces of every
+  // request and its outgoing calls. Head sampling 1 = keep everything (fine at this scale;
+  // lower it if logs get expensive).
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true, "invocation_logs": true },
+    "traces": { "enabled": true }
+  },
+  // Business data lives in Neon Postgres, reached through Hyperdrive (pooled connections).
+  // The Hyperdrive config holds the connection string for the least-privilege role
+  // mcp_connector, so the secret lives in Cloudflare, not here. Create it once with
+  //   npm run hyperdrive:create
+  // and paste the id it prints below. Query caching is OFF for this config: a cache that
+  // can't see app.tenant_id could hand one company another company's rows (lesson 19.9).
+  // Locally, `wrangler dev` and the tests use the connection string in .env instead
+  // (CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE).
+  // Steps 9-20 share step 8's databases and Hyperdrive configs: their migrations only ADD
+  // tables, so earlier steps keep working, and the free plan's Hyperdrive limit isn't hit.
+  // Each step has its own KV cache.
+  "hyperdrive": [
+    // The SHARED database: every shared-tier company, plus the tenants table that says
+    // where each company lives.
+    { "binding": "HYPERDRIVE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" },
+    // One DEDICATED database per enterprise company (TENANCY.md). Its binding name is
+    // stored in the tenants table. `npm run tenant:dedicate` creates the database.
+    { "binding": "TENANT_DB_ENTERPRISE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" }
+  ],
+  // Workers AI, for embeddings (bge-m3). Always runs on Cloudflare, even in wrangler dev,
+  // and counts against the free daily allowance.
+  "ai": { "binding": "AI", "remote": true },
+  // "workers-ai" = the real model. Tests set EMBEDDINGS to "test" (see vitest.config.ts).
+  "vars": { "EMBEDDINGS": "workers-ai" },
+  // Per-user state (draft order, rate limit): one UserState Durable Object per user in a
+  // company, named org:<orgId>:user:<userId>. new_sqlite_classes = SQLite-backed objects,
+  // the kind the free plan supports.
+  "durable_objects": { "bindings": [{ "name": "USER_STATE", "class_name": "UserState" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UserState"] }],
+  // Background bulk imports. The tool PRODUCES messages on order-imports; this same Worker
+  // CONSUMES them (see queue() in src/index.ts):
+  //   max_batch_size 10      up to 10 messages (500 CSV rows) per consumer call
+  //   max_batch_timeout 5    or whatever has arrived after 5 seconds
+  //   max_retries 3          a failing message is tried 4 times in all...
+  //   dead_letter_queue      ...then parked on order-imports-dlq to be looked at, not lost
+  // A queue has exactly ONE consumer Worker, and step 12 owns order-imports, so this step
+  // has its own queue. The dead-letter queue (no consumer) is shared by all steps.
+  // Create once: npx wrangler queues create order-imports-step-17
+  //              npx wrangler queues create order-imports-dlq
+  "queues": {
+    "producers": [
+      { "binding": "ORDER_IMPORTS", "queue": "order-imports-step-17" },
+      // Events: create_order and submit_draft hand order.created here and return at once.
+      { "binding": "SALES_EVENTS", "queue": "sales-events-step-17" }
+    ],
+    "consumers": [
+      {
+        "queue": "order-imports-step-17",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "order-imports-dlq"
+      },
+      {
+        "queue": "sales-events-step-17",
+        "max_batch_size": 25,
+        "max_batch_timeout": 2,
+        "max_retries": 5,
+        "dead_letter_queue": "sales-events-dlq"
+      }
+    ]
+  },
+  // Durable jobs: one SalesReportWorkflow run per report (see src/sales-report.ts).
+  "workflows": [{ "name": "learn-mcp-step-17-sales-report", "binding": "SALES_REPORT", "class_name": "SalesReportWorkflow" }],
+  // Per-company caches (settings, placement), always under org:<orgId>:... keys.
+  // Created by the first `wrangler deploy` (automatic provisioning); its id is pinned here
+  // so later deploys reuse it. In your own fork, delete the id and deploy once to get yours.
+  "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "be93701e355b4560a9ae1fa37c480678" }],
+  // D1 holds ONLY auth data: users, sessions, companies (organizations), members and
+  // OAuth clients/tokens. Apply the schema with:
+  //   npx wrangler d1 migrations apply learn-mcp-step-13-auth --local   (local)
+  //   npx wrangler d1 migrations apply learn-mcp-step-13-auth --remote  (after deploying)
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "learn-mcp-step-13-auth",
+      "database_id": "5243b652-7a02-4275-a566-8c4519bd0a59",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
