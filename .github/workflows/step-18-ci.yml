@@ -1,0 +1,148 @@
+name: Step 18 CI/CD
+
+on:
+  push:
+    paths:
+      - step-18-deploy-and-test/**
+      - .github/workflows/step-18-ci.yml
+  pull_request:
+    paths:
+      - step-18-deploy-and-test/**
+      - .github/workflows/step-18-ci.yml
+  workflow_dispatch:
+    inputs:
+      run_paid_eval:
+        description: Run the paid Claude tool-choice eval against staging
+        type: boolean
+        default: false
+      deploy_production:
+        description: Deploy to production after staging passes (environment approval required)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: step-18-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: step-18-deploy-and-test
+    env:
+      STAGING_DOTENV: ${{ secrets.STAGING_DOTENV }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: step-18-deploy-and-test/package-lock.json
+      - name: Write staging database config when available
+        if: ${{ env.STAGING_DOTENV != '' }}
+        run: |
+          umask 077
+          printf '%s' "$STAGING_DOTENV" > .env
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test -- --maxWorkers=1 --silent
+      - run: npm run eval:retrieval -- --embedder test
+
+  staging:
+    needs: test
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.deploy_production == 'true' || github.event.inputs.run_paid_eval == 'true'))
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: step-18-deploy-and-test
+    env:
+      WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: step-18-deploy-and-test/package-lock.json
+      - run: npm ci
+      - run: npm run deploy:staging
+      - name: Smoke-check staging
+        run: |
+          test -n "$WORKER_BASE_URL"
+          curl -fsS "$WORKER_BASE_URL/version"
+          status=$(curl -sS -o /dev/null -w '%{http_code}' "$WORKER_BASE_URL/mcp")
+          test "$status" = "401"
+
+  paid-eval:
+    needs: [test, staging]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_paid_eval == 'true' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: step-18-deploy-and-test
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      EVAL_MCP_URL: ${{ vars.WORKER_BASE_URL }}/mcp
+      EVAL_STAFF_TOKEN: ${{ secrets.EVAL_STAFF_TOKEN }}
+      EVAL_MANAGER_TOKEN: ${{ secrets.EVAL_MANAGER_TOKEN }}
+      EVAL_MODEL: claude-sonnet-4-6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: step-18-deploy-and-test/package-lock.json
+      - run: npm ci
+      - run: npm run evals
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: step-18-eval-results
+          path: |
+            step-18-deploy-and-test/evals/tool-choice-results.md
+            step-18-deploy-and-test/evals/tool-choice-results.json
+
+  production:
+    needs: [test, staging, paid-eval]
+    if: >-
+      always() && needs.test.result == 'success' && needs.staging.result == 'success' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.deploy_production == 'true' &&
+      (github.event.inputs.run_paid_eval != 'true' || needs.paid-eval.result == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: step-18-deploy-and-test
+    env:
+      WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: step-18-deploy-and-test/package-lock.json
+      - run: npm ci
+      - run: npm run deploy:production
+      - name: Smoke-check production
+        run: |
+          test -n "$WORKER_BASE_URL"
+          curl -fsS "$WORKER_BASE_URL/version"
+          status=$(curl -sS -o /dev/null -w '%{http_code}' "$WORKER_BASE_URL/mcp")
+          test "$status" = "401"

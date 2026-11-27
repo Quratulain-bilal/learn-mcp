@@ -1,0 +1,6 @@
+# Build output (npm run build:widgets)
+src/widgets/generated.ts
+src/skills/generated.ts
+
+# The staging example has placeholders only, so it is committed (the root .gitignore hides .env.*).
+!.env.staging.example
