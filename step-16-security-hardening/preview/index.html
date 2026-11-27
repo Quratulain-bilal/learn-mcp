@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Widget preview (local host stand-in)</title>
+    <style>
+      body { font: 14px system-ui; margin: 16px; background: #eee; }
+      body.dark { background: #111; color: #ddd; }
+      .bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+      iframe { width: 640px; border: 1px solid #bbb; border-radius: 10px; background: transparent; display: block; }
+      pre { font-size: 12px; max-width: 640px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <select id="widget"><option>orders-table</option><option>sales-chart</option><option>order-form</option></select>
+      <select id="theme"><option>light</option><option>dark</option></select>
+      <button id="load">Load</button>
+    </div>
+    <iframe id="frame" sandbox="allow-scripts" title="widget"></iframe>
+    <h3>Messages from the widget</h3>
+    <pre id="log"></pre>
+    <script type="module" src="./preview.ts"></script>
+  </body>
+</html>
