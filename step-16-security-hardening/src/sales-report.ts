@@ -299,7 +299,7 @@ export function registerReportTools(
     {
       title: "Approve and publish a sales report",
       description:
-        "Approve a finished sales report (stage awaiting_approval) so it's published (admins only). This is irreversible: call once to get the confirmation form, then only continue after the user explicitly confirms.",
+        "Approve a finished sales report (stage awaiting_approval) so it's published (admins only). This is irreversible: call once to get the confirmation form, or a sealed token if the client can't show a form, then only continue after the user explicitly confirms.",
       inputSchema: z.object({
         report_id: reportId,
         confirmationToken: z

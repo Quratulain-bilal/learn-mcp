@@ -15,13 +15,20 @@ import { createServer } from "../src/server";
 
 const PROTOCOL_VERSION = "2025-06-18";
 export const LATEST_PROTOCOL = "2026-07-28";
+const DEFAULT_CLIENT_CAPABILITIES = { elicitation: { form: {}, url: {} } };
 let nextId = 1;
 
 // JSON-RPC replies are loose JSON here; `any` keeps the test assertions readable.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RpcReply = { result?: any; error?: any };
 
-export function mcpRequest(method: string, params: unknown, token?: string, protocolVersion = PROTOCOL_VERSION): Request {
+export function mcpRequest(
+  method: string,
+  params: unknown,
+  token?: string,
+  protocolVersion = PROTOCOL_VERSION,
+  clientCapabilities: Record<string, unknown> = DEFAULT_CLIENT_CAPABILITIES,
+): Request {
   const modern = protocolVersion >= LATEST_PROTOCOL;
   const wireParams =
     modern && params && typeof params === "object" && !Array.isArray(params)
@@ -31,9 +38,7 @@ export function mcpRequest(method: string, params: unknown, token?: string, prot
             ...((params as Record<string, unknown>)._meta as Record<string, unknown> | undefined),
             [PROTOCOL_VERSION_META_KEY]: protocolVersion,
             [CLIENT_INFO_META_KEY]: { name: "learn-mcp-tests", version: "1.0.0" },
-            [CLIENT_CAPABILITIES_META_KEY]: {
-              elicitation: { form: {}, url: {} },
-            },
+            [CLIENT_CAPABILITIES_META_KEY]: clientCapabilities,
           },
         }
       : params;
@@ -73,7 +78,11 @@ export async function readRpc(response: Response): Promise<RpcReply> {
  * A client for the MCP server as ONE given user, WITHOUT the OAuth layer, for fast tests
  * of the tools themselves. The OAuth layer is tested end to end in auth.test.ts.
  */
-export function clientAs(tenant: TenantContext, forTenant: ForTenant = testForTenant) {
+export function clientAs(
+  tenant: TenantContext,
+  forTenant: ForTenant = testForTenant,
+  clientCapabilities?: Record<string, unknown>,
+) {
   const handler = createMcpHandler(() =>
     createServer({
       forTenant,
@@ -89,7 +98,7 @@ export function clientAs(tenant: TenantContext, forTenant: ForTenant = testForTe
     }),
   );
   const rpc = async (method: string, params: unknown, protocolVersion?: string) =>
-    readRpc(await handler.fetch(mcpRequest(method, params, undefined, protocolVersion)));
+    readRpc(await handler.fetch(mcpRequest(method, params, undefined, protocolVersion, clientCapabilities)));
   return {
     rpc,
     callTool: (name: string, args: Record<string, unknown>, protocolVersion?: string) =>

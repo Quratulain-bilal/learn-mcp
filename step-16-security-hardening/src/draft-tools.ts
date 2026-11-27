@@ -93,7 +93,7 @@ export function registerDraftTools(
     {
       title: "Clear the draft order",
       description:
-        "Throw away the user's draft order. Call once to get the confirmation form, then only continue after the user explicitly confirms.",
+        "Throw away the user's draft order. Call once to get the confirmation form, or a sealed token if the client can't show a form, then only continue after the user explicitly confirms.",
       inputSchema: z.object({
         confirmationToken: z
           .string()

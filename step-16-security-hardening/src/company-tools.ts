@@ -183,7 +183,7 @@ export function registerCompanyTools(
       title: "Remove a member from the company",
       description:
         "Remove a person from this company (admins only). They lose access on their very next request, even with a token they already have. " +
-        "You can't remove yourself or the last admin. This is irreversible: call once to get the confirmation form, then only continue after the user explicitly confirms.",
+        "You can't remove yourself or the last admin. This is irreversible: call once to get the confirmation form, or a sealed token if the client can't show a form, then only continue after the user explicitly confirms.",
       inputSchema: z.object({
         email: email.describe("The email of the person to remove."),
         confirmationToken: z

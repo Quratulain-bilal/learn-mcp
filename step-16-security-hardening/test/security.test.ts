@@ -5,7 +5,7 @@ import { createAuth } from "../src/auth";
 import { createConfirmationGate, type ConfirmationState } from "../src/confirmation";
 import { untrusted } from "../src/tool-helpers";
 import { plantCompany, removeCompany, uniqueOrg } from "./fixtures";
-import { asOwner, brokenForTenant, clientAs, hasDatabase, tenantCtx, testForTenant, workerRpc } from "./helpers";
+import { asOwner, brokenForTenant, clientAs, hasDatabase, LATEST_PROTOCOL, tenantCtx, testForTenant, workerRpc } from "./helpers";
 import { connect } from "./oauth";
 
 /**
@@ -162,6 +162,18 @@ describe("R5 destructive confirmations are sealed to the company, user, tool and
     }) as unknown as ServerContext;
   const companyA = tenantCtx({ orgId: uniqueOrg("confirm-a"), userId: "user-a" });
   const companyB = tenantCtx({ orgId: uniqueOrg("confirm-b"), userId: "user-a" });
+
+  it("returns a two-call token when the client did not declare elicitation", async () => {
+    const client = clientAs(tenantCtx({ userId: crypto.randomUUID() }), undefined, {});
+    const first = await client.callTool("clear_draft", {}, LATEST_PROTOCOL);
+    expect(first.resultType).not.toBe("input_required");
+    expect(first.isError).toBe(true);
+    const token = /confirmationToken "([^"]+)"/.exec(first.content[0].text)?.[1];
+    expect(token).toBeTruthy();
+    const second = await client.callTool("clear_draft", { confirmationToken: token }, LATEST_PROTOCOL);
+    expect(second.isError).toBeFalsy();
+    expect(second.structuredContent).toEqual({ cleared: false });
+  });
 
   it("accepts the same arguments, but refuses changed arguments", async () => {
     const gate = createConfirmationGate(env.CONFIRMATION_SECRET, companyA);

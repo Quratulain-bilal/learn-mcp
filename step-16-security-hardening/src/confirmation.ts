@@ -1,5 +1,6 @@
 import {
   acceptedContent,
+  CLIENT_CAPABILITIES_META_KEY,
   createRequestStateCodec,
   inputRequired,
   type ServerContext,
@@ -17,7 +18,25 @@ const confirmationSchema = z.object({
   confirmation: z.string().min(1).max(80),
 });
 
-type Result = { ok: true } | { ok: false; result: ReturnType<typeof inputRequired>; token: string };
+type Result =
+  | { ok: true }
+  | {
+      ok: false;
+      result:
+        | ReturnType<typeof inputRequired>
+        | { isError: true; content: { type: "text"; text: string }[] };
+      token: string;
+    };
+
+function supportsFormElicitation(ctx: ServerContext): boolean {
+  const envelope = ctx.mcpReq.envelope as Record<string, unknown> | undefined;
+  const capabilities = envelope?.[CLIENT_CAPABILITIES_META_KEY] as { elicitation?: Record<string, unknown> } | undefined;
+  const elicitation = capabilities?.elicitation;
+  if (!elicitation || typeof elicitation !== "object") return false;
+  const form = elicitation.form;
+  const url = elicitation.url;
+  return form !== undefined || url === undefined;
+}
 
 function stable(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
@@ -74,6 +93,23 @@ export function createConfirmationGate(secret: string, tenant: TenantContext, tt
       }
 
       const token = await codec.mint({ tool, argsDigest, phrase }, ctx);
+      if (!supportsFormElicitation(ctx)) {
+        return {
+          ok: false,
+          token,
+          result: {
+            isError: true,
+            content: [
+              {
+                type: "text",
+                text:
+                  `${summary}\n\nThis client can't show a confirmation form. Ask the user to type ${phrase} to confirm. ` +
+                  `Then call this same tool again with confirmationToken "${token}".`,
+              },
+            ],
+          },
+        };
+      }
       return {
         ok: false,
         token,
