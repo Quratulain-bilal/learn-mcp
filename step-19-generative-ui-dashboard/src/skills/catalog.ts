@@ -43,14 +43,15 @@ export function registerSkills(server: McpServer): void {
     {
       title: "Monthly sales review",
       description:
-        "Prepare a review of one month's sales: numbers, charts, comparison with the month before and recommendations. " +
+        "Prepare a sales review: numbers, a show_dashboard widget, comparison with the previous equal-length period and " +
+        "recommendations. Use for a month, quarter, year or 'how are we doing'. " +
         "(The same playbook as the monthly-sales-review skill, for apps that don't load skills from servers yet.)",
       argsSchema: z.object({
         month: z
           .string()
-          .regex(/^\d{4}-\d{2}$/, "Use YYYY-MM, e.g. 2025-11.")
+          .regex(/^\d{4}(-\d{2})?$/, "Use YYYY or YYYY-MM, e.g. 2026 or 2025-11.")
           .optional()
-          .describe("The month to review, as YYYY-MM. Leave empty for last month."),
+          .describe("The month (YYYY-MM) or year (YYYY) to review. Leave empty for last month."),
       }),
     },
     async ({ month }) => {
@@ -66,7 +67,7 @@ export function registerSkills(server: McpServer): void {
             content: {
               type: "text",
               text:
-                `Prepare the monthly sales review for ${month ?? "last month"}. Follow this playbook exactly:\n\n` +
+                `Prepare the sales review for ${month ?? "last month"}. Follow this playbook exactly:\n\n` +
                 body(SKILL_FILES["monthly-sales-review/SKILL.md"]!) +
                 references,
             },

@@ -46,11 +46,13 @@ The user says what they want to know ("how are we doing this year?"), and the **
 
 | | claude.ai | Claude Desktop | ChatGPT |
 | --- | --- | --- | --- |
-| Right tool (of 20) | | | |
-| Sensible blocks (of the 11 dashboard intents) | | | |
-| Notes | | | needs a paid plan |
+| Right tool (of 20) | 1 of 20 checked | | 1 of 20 checked |
+| Sensible blocks (of the 11 dashboard intents) | 1 of 11 checked | | 1 of 11 checked |
+| Notes | prompt 1 rendered the KPI + monthly chart widget; screenshot still needed | | needs a paid plan; prompt 1 called `show_dashboard`, the text fallback was correct (KPIs + monthly chart); screenshot still needed |
 
-Use `evals/dashboard-runbook.md` to record each prompt. No client run has been performed in this fork yet, so the table stays blank rather than claiming untested results.
+Use `evals/dashboard-runbook.md` to record each prompt. Prompt 1 ("How are we doing this year?") was checked in claude.ai and ChatGPT after the tool description was strengthened: the right tool ran and the numbers were correct. claude.ai rendered the dashboard widget with KPI cards and a monthly chart; ChatGPT showed the text fallback. The other prompts are still unchecked.
+
+Client support: the official MCP extension matrix currently lists no MCP Apps support in ChatGPT, so ChatGPT can only show `show_dashboard`'s text fallback; a real widget must be verified in Claude Desktop or claude.ai. A text-only answer is not a widget pass, even when the numbers are right.
 
 ## Where generative UI worked well, and where a fixed screen is better
 
@@ -86,3 +88,5 @@ Use `evals/dashboard-runbook.md` to record each prompt. No client run has been p
 Local verification in this fork: `npm run typecheck` passes, `npm test -- --maxWorkers=1 --silent` passes 55 tests with 98 database tests skipped because this step has no `.env` pointing at a step-19 Neon branch, and `npm run eval:retrieval -- --embedder test` is at the step 17 baseline (100% found in top 3, 100% correct abstentions). `npm run eval:dashboard` validates the 20 prompts and writes `evals/dashboard-runbook.md`. The live Worker is `https://learn-mcp-step-19.learn-mcp-step-01.workers.dev`. Smoke test: `/version` returns `{"name":"learn-mcp-step-19","release":"1.0.0","environment":"production"}`, `/mcp` returns `401` without a token, `/sign-in` returns `200`, and `/api/auth/jwks` returns `200`.
 
 Live authorization failed in Claude because step 19 shares step 18's auth D1 but had a new `BETTER_AUTH_SECRET`: the shared `jwks` row's private key was encrypted with step 18's secret, so step 19 could not sign OAuth tokens. Fixed by giving the JWT plugin a step-19-only keyring in the new `step19_jwks` table (`migrations/0002_step19_jwks.sql`); the shared `jwks` row is untouched, so steps 13 to 18 keep working. Reconnect the connector after redeploy so it receives a token signed by the new key. Live scripted OAuth smoke after the fix: `/api/auth/oauth2/token` returned `200`, the access token audience contained the step-19 `/mcp` URL, and `POST /mcp` with that token returned `200` with `tools`.
+
+A ChatGPT run of "How are we doing this year?" returned prose and the `monthly-sales-review` skill as text, without a `show_dashboard` call. Strengthened the tool description ("FIRST CHOICE", "renders the dashboard widget") and the skill so overview, health-check and year prompts call `show_dashboard` before answering; `get_sales_summary` no longer claims "how are we doing" questions. The server cannot force a host model to call a tool, so the widget still has to be verified where MCP Apps are supported.

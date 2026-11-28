@@ -185,13 +185,17 @@ export function registerDashboard(
     {
       title: "Show a sales dashboard",
       description:
-        "Compose a DASHBOARD in the chat from approved blocks, to answer what the user wants to see at a glance. Pick 1-6 blocks:\n" +
+        "FIRST CHOICE for any question about how the business is doing: a year, quarter, month, date range, overview, " +
+        "health check, summary, 'how are we doing', or 'at a glance'. Call this tool before get_sales_summary or " +
+        "answer_business_question; it is the only sales tool that renders the dashboard widget in the chat. " +
+        "Never answer an overview in prose or in a hand-written table without calling this tool first.\n" +
+        "Compose a DASHBOARD from 1-6 approved blocks:\n" +
         "- kpi: 1-4 headline cards (revenue, orders, average_order_value, customers, top_product, top_customer), optionally compared with the previous period\n" +
         "- chart: revenue bars by month, product or customer\n" +
         "- table: the most recent orders, optionally filtered by customer or product\n" +
         "- report: the latest saved yearly report (start_sales_report makes one)\n" +
-        "Use it for overview questions (\"how are we doing\", \"March at a glance\", \"health check\"). For one specific list, chart " +
-        "or order, use list_orders, get_sales_summary or get_order instead. Give the dashboard a short title saying what it answers.",
+        "For a whole year use a kpi block with from/to covering the year and a chart grouped by month. " +
+        "For one specific list, chart or order only, use list_orders, get_sales_summary or get_order instead.",
       _meta: { ui: { resourceUri: WIDGETS.dashboard } },
       inputSchema: z.object({
         title: z.string().trim().min(3).max(80).describe('What the dashboard answers, e.g. "March 2025 at a glance".'),

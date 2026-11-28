@@ -6,7 +6,7 @@ The expected screen is the widget URI key from `src/widgets/resources.ts`. `text
 
 | # | Prompt | Expected tool | Expected screen | claude.ai | Claude Desktop | ChatGPT |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | How are we doing this year? | `show_dashboard` | `dashboard (kpi, chart)` |  |  |  |
+| 1 | How are we doing this year? | `show_dashboard` | `dashboard (kpi, chart)` | yes / yes |  | yes / text only |
 | 2 | Give me March 2025 at a glance. | `show_dashboard` | `dashboard (kpi, chart)` |  |  |  |
 | 3 | Compare last month with the month before. | `show_dashboard` | `dashboard (kpi)` |  |  |  |
 | 4 | Quick health check of sales for the board meeting. | `show_dashboard` | `dashboard (kpi, chart, table)` |  |  |  |

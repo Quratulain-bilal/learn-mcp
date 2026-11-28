@@ -23,6 +23,7 @@ describe("Skills over MCP (io.modelcontextprotocol/skills)", () => {
     expect(skill.uri).toBe(SKILL);
     expect(skill.frontmatter.name).toBe("monthly-sales-review");
     expect(skill.frontmatter.description).toMatch(/monthly sales review/i);
+    expect(skill.frontmatter.description).toContain("how are we doing this year");
     const uris = skill.resources.map((r: { uri: string }) => r.uri).sort();
     expect(uris).toEqual([
       SKILL,

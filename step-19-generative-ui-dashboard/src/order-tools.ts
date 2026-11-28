@@ -208,8 +208,9 @@ export function registerOrderTools(
     {
       title: "Sales summary",
       description:
-        "Show the company's sales totals as a bar CHART, grouped by month, product or customer: orders, units and revenue per group, plus a grand total. " +
-        "Use it for trends, comparisons and \"how are we doing\" questions, instead of paging through list_orders. Optionally limit to a date range. " +
+        "Show one specific bar CHART of sales grouped by month, product or customer: orders, units and revenue per group, plus a grand total. " +
+        "Use it when the user asks for a trend or comparison chart, not for an overview, year review, health check or 'how are we doing' " +
+        "question: those must call show_dashboard so the model can compose the right screen. Optionally limit to a date range. " +
         "Groups at or above the company's sales threshold are highlighted.",
       _meta: { ui: { resourceUri: WIDGETS.salesChart } },
       inputSchema: z.object({

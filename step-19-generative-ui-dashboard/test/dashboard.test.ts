@@ -11,6 +11,8 @@ describe("show_dashboard: approved parts only (no database needed)", () => {
     const { result } = await demo.rpc("tools/list", {});
     const tool = result.tools.find((t: { name: string }) => t.name === "show_dashboard");
     expect(tool._meta.ui.resourceUri).toBe(WIDGETS.dashboard);
+    expect(tool.description).toContain("FIRST CHOICE");
+    expect(tool.description).toContain("renders the dashboard widget");
     const read = await demo.rpc("resources/read", { uri: WIDGETS.dashboard });
     expect(read.result.contents[0].text).toContain('<div id="root"></div>');
   });
@@ -32,6 +34,8 @@ describe("show_dashboard: approved parts only (no database needed)", () => {
   it("the 20-intent eval set names real tools, widgets and valid block types", async () => {
     const { result } = await demo.rpc("tools/list", {});
     const names = new Set(result.tools.map((t: { name: string }) => t.name));
+    const summary = result.tools.find((t: { name: string }) => t.name === "get_sales_summary");
+    expect(summary.description).toContain("show_dashboard");
     const widgetUris: Record<string, string> = {
       dashboard: WIDGETS.dashboard,
       "orders-table": WIDGETS.ordersTable,
