@@ -40,6 +40,7 @@ jobs:
         working-directory: step-18-deploy-and-test
     env:
       STAGING_DOTENV: ${{ secrets.STAGING_DOTENV }}
+      ENV_FILE: .env.staging
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,7 +52,7 @@ jobs:
         if: ${{ env.STAGING_DOTENV != '' }}
         run: |
           umask 077
-          printf '%s' "$STAGING_DOTENV" > .env
+          printf '%s' "$STAGING_DOTENV" > .env.staging
       - run: npm ci
       - run: npm run typecheck
       - run: npm test -- --maxWorkers=1 --silent

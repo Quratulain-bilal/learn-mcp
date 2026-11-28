@@ -52,9 +52,9 @@ npx wrangler rollback <version-id> -m "why" # to a specific version
 
 A rollback changes **code only**. Database migrations stay, which is why they must be additive. Secrets and bindings stay. After rolling back, check `/version` and run TEST-PLAN section 7.
 
-## Practice rollback (not yet done)
+## Practice rollback (done)
 
-On staging, rehearse it before a production release:
-1. Bump `RELEASE` to `1.0.1`, deploy with `npm run deploy:staging`, and confirm `/version`.
-2. Run `npx wrangler rollback --env staging -y -m "practice rollback: 1.0.1 -> 1.0.0"` and confirm `/version` returns `1.0.0`.
+Rehearsed on staging before release:
+1. Bumped `RELEASE` to `1.0.1`, deployed with `npm run deploy:staging`, and confirmed `/version` returned `1.0.1`.
+2. Ran `npx wrangler rollback --env staging -y -m "practice rollback: 1.0.1 -> 1.0.0"` and confirmed `/version` returned `1.0.0`.
 3. Set `RELEASE` back to `1.0.0` in the code, so the code matches what is running.

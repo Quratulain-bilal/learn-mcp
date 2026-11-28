@@ -7,8 +7,9 @@
   //   staging     `npm run deploy:staging`: env.staging below, deployed as learn-mcp-step-18-staging
   //
   // Bindings are NOT inherited by an environment, so env.staging repeats every one of them.
-  // KV, queues and Workflow are separate per environment; D1 and Hyperdrive are reused here
-  // because no new Neon/D1 resources were created, so auth and business data are shared.
+  // KV, queues, Workflow and D1 are separate per environment. Hyperdrive is still shared
+  // because the free Cloudflare account has no spare configs; isolated Neon databases exist
+  // and are verified by ENV_FILE tests, but they need new Hyperdrive configs before binding.
   "name": "learn-mcp-step-18",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-22",
@@ -79,7 +80,7 @@
       "workflows": [{ "name": "learn-mcp-step-18-staging-sales-report", "binding": "SALES_REPORT", "class_name": "SalesReportWorkflow" }],
       "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "8690e3bfbdd646c4a285554dbdc79447" }],
       "d1_databases": [
-        { "binding": "AUTH_DB", "database_name": "learn-mcp-step-13-auth", "database_id": "5243b652-7a02-4275-a566-8c4519bd0a59", "migrations_dir": "migrations" }
+        { "binding": "AUTH_DB", "database_name": "learn-mcp-step-12-auth", "database_id": "691cb82f-b291-4f76-8488-bdc34bfe6232", "migrations_dir": "migrations" }
       ]
     }
   }

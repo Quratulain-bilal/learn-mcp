@@ -2,6 +2,8 @@
 
 Run it against **staging** before every production release, then the short **smoke** section against **production** right after. Tick each box per client. "Admin" and "Member" are two accounts in the same company; "Other" is an account in another company.
 
+Staging and production use separate D1 auth databases, secrets and signing keys. Their isolated Neon databases are created and tested, but the deployed Workers still share one Hyperdrive config on the free Cloudflare plan. If you connected before the auth database was separated, remove the connector and add it again so the client gets a token signed by the staging key.
+
 | Client | How to connect |
 | --- | --- |
 | **claude.ai** | Settings → Connectors → Add custom connector → `https://learn-mcp-step-18-staging.learn-mcp-step-01.workers.dev/mcp` |
@@ -79,7 +81,7 @@ ENV_FILE=.env.staging npx tsx scripts/embed.ts --org <id> --set harbor
 
 | # | Check | Done |
 | --- | --- | --- |
-| 7.1 | `curl https://learn-mcp-step-18.<your-subdomain>.workers.dev/version` shows the new release and `"environment":"production"` | ☐ |
+| 7.1 | `curl https://learn-mcp-step-18.learn-mcp-step-01.workers.dev/version` shows the new release and `"environment":"production"` | ☑ |
 | 7.2 | In claude.ai on the production connector: 2.2, 3.2 and 4.1 | ☐ |
 | 7.3 | Workers Logs for `learn-mcp-step-18`: `type = audit` lines appear, no `outcome: "exception"` spike | ☐ |
 

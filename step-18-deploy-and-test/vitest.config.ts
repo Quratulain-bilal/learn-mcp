@@ -7,8 +7,9 @@ import { defineConfig, type ViteUserConfig } from "vitest/config";
 // .env holds the local database connection strings (see .env.example). Loading it here lets
 // Wrangler find CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE, the local stand-in
 // for the HYPERDRIVE binding.
-if (existsSync(".env")) {
-  for (const line of readFileSync(".env", "utf8").split("\n")) {
+const ENV_FILE = process.env.ENV_FILE ?? ".env";
+if (existsSync(ENV_FILE)) {
+  for (const line of readFileSync(ENV_FILE, "utf8").split("\n")) {
     const match = line.trim().match(/^([A-Z0-9_]+)=(.*)$/);
     if (match && process.env[match[1]!] === undefined) process.env[match[1]!] = match[2];
   }

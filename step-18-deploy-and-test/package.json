@@ -30,7 +30,12 @@
     "deploy:staging": "npm run build:assets && wrangler deploy --env staging",
     "deploy:production": "npm run build:assets && wrangler deploy",
     "db:migrate:staging": "cross-env ENV_FILE=.env.staging tsx scripts/migrate.ts",
-    "auth:migrate:staging": "wrangler d1 migrations apply learn-mcp-auth-staging --remote --env staging",
+    "db:migrate:production": "cross-env ENV_FILE=.env.production tsx scripts/migrate.ts",
+    "db:seed:staging": "cross-env ENV_FILE=.env.staging tsx scripts/seed-company.ts",
+    "db:seed:production": "cross-env ENV_FILE=.env.production tsx scripts/seed-company.ts",
+    "test:staging": "cross-env ENV_FILE=.env.staging vitest run",
+    "auth:migrate:staging": "wrangler d1 migrations apply learn-mcp-step-12-auth --remote --env staging",
+    "auth:migrate:production": "wrangler d1 migrations apply learn-mcp-step-13-auth --remote",
     "rollback:staging": "wrangler rollback --env staging",
     "rollback:production": "wrangler rollback"
   },
