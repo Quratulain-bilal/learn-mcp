@@ -1,6 +1,6 @@
 import { mcp } from "@better-auth/mcp";
 import { betterAuth } from "better-auth";
-import { jwt, organization } from "better-auth/plugins";
+import { jwt, organization, type Jwk } from "better-auth/plugins";
 
 /**
  * Better Auth makes this Worker its own OAuth 2.1 authorization server, so Claude and
@@ -30,6 +30,7 @@ const SCOPES = ["openid", "profile", "email", "offline_access", "sales"];
  * from the request, so nothing about a request is kept between requests.
  */
 export function createAuth(env: Env, origin: string) {
+  const keyring = createStep19JwkKeyring(env.AUTH_DB);
   const auth = betterAuth({
     appName: "learn-mcp sales",
     baseURL: origin,
@@ -47,7 +48,10 @@ export function createAuth(env: Env, origin: string) {
     disabledPaths: ["/token"],
 
     plugins: [
-      jwt({ disableSettingJwtHeader: true }),
+      jwt({
+        disableSettingJwtHeader: true,
+        adapter: keyring,
+      }),
 
       // Companies (tenants) and roles. Whoever creates a company is its admin.
       organization({ creatorRole: "admin", allowUserToCreateOrganization: true }),
@@ -122,6 +126,53 @@ export function createAuth(env: Env, origin: string) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+type JwkRow = {
+  id: string;
+  publicKey: string;
+  privateKey: string;
+  createdAt: string;
+  expiresAt: string | null;
+  alg: Jwk["alg"] | null;
+  crv: Jwk["crv"] | null;
+};
+
+function createStep19JwkKeyring(db: D1Database) {
+  return {
+    async getJwks(): Promise<Jwk[]> {
+      const result = await db
+        .prepare('SELECT id, publicKey, privateKey, createdAt, expiresAt, alg, crv FROM step19_jwks ORDER BY createdAt DESC')
+        .all<JwkRow>();
+      return (result.results ?? []).map((row) => ({
+        id: row.id,
+        publicKey: row.publicKey,
+        privateKey: row.privateKey,
+        createdAt: new Date(row.createdAt),
+        ...(row.expiresAt ? { expiresAt: new Date(row.expiresAt) } : {}),
+        ...(row.alg ? { alg: row.alg } : {}),
+        ...(row.crv ? { crv: row.crv } : {}),
+      }));
+    },
+    async createJwk(data: Omit<Jwk, "id">): Promise<Jwk> {
+      const id = crypto.randomUUID();
+      await db
+        .prepare(
+          'INSERT INTO step19_jwks (id, publicKey, privateKey, createdAt, expiresAt, alg, crv) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        )
+        .bind(
+          id,
+          data.publicKey,
+          data.privateKey,
+          data.createdAt.toISOString(),
+          data.expiresAt?.toISOString() ?? null,
+          data.alg ?? null,
+          data.crv ?? null,
+        )
+        .run();
+      return { ...data, id };
+    },
+  };
+}
 
 async function firstCompanyId(db: D1Database, userId: string): Promise<string | null> {
   const row = await db
