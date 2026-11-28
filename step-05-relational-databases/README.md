@@ -1,21 +1,21 @@
 # Step 05: Relational Databases and Normal Forms with Neon
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Give your remote MCP server a real business database, and learn to design one well while you do it. The server connects to Neon Postgres, its migrations create a sales schema that you take from a messy spreadsheet through the first three normal forms (1NF, 2NF and 3NF), and new read-only tools let Claude and ChatGPT explore the schema, answer business questions from it and show why normalization matters. Auth stays in D1, and the KV notes tools from steps 2 to 4 are replaced by sales data.
+
+> 🏬 **Stockroom's ask:** Notes aren't enough. Stockroom's customers want to ask about their sales ("who bought the most last month?"), and their history arrives as a messy spreadsheet. You design a proper sales database in Neon that the model can answer from.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [19.1 Why a database now](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/why-a-database-now/). Why business data moves into a database server, separate from the sign-in data.
-- [19.2 Tables, rows and keys, from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/tables-rows-and-keys-from-zero/). Tables, columns, primary and foreign keys, and the three shapes of query.
-- [19.3 Reading SQL: predict, then run](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/reading-sql/). Reading SQL before you trust it, including SQL a coding agent writes.
-- [19.5 Third normal form in detail: keep it, break it on purpose](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/third-normal-form-in-detail/). Normal forms from zero, then 3NF in detail, and when to keep a copy on purpose.
+- [19.1 Why move the data out of the code?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/why-a-database-now/). Why business data moves into a database server, separate from the sign-in data.
+- [19.2 What are tables, rows and keys?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/tables-rows-and-keys-from-zero/). Tables, columns, primary and foreign keys, and the three shapes of query.
+- [19.3 How do you read SQL an agent wrote?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/reading-sql/). Reading SQL before you trust it, including SQL a coding agent writes.
+- [19.5 Where does each fact belong?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/third-normal-form-in-detail/). Normal forms from zero, then 3NF in detail, and when to keep a copy on purpose.
 - [Field guide F5, The SQL in detail](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f5-the-sql-in-detail). The SQL reference, with first, second and third normal form side by side.
 - [Field guide F1, Postgres from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f1-postgres-from-zero) and [F2, Neon from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f2-neon-from-zero). Setting up Postgres on Neon.
-- [19.6 Changing the tables safely](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/changing-the-tables-safely/). Numbered migrations, applied once and in order.
-- *Optional:* [18.8 Tables, rows and relationships](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/tables-rows-and-relationships/). The same ideas at reading depth, if you want a gentler start.
+- [19.6 How do you change tables that are in use?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/changing-the-tables-safely/). Numbered migrations, applied once and in order.
+- *Optional:* [18.8 How do you read the sign-in server's records?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/tables-rows-and-relationships/). The same ideas at reading depth, if you want a gentler start.
 
 **Official docs.** Keep these open while you build:
 
@@ -36,6 +36,8 @@ Almost every client server you build as an FDE has a database behind it, and a b
 - **Why an MCP server uses it.** Most client servers exist to let a model work with a business's data. The questions users ask ("top products last quarter", "best customers") are joins, filters and totals, which SQL answers exactly. A normalized schema means every tool returns the same, consistent answer, and fixed SQL behind each tool keeps the model from running queries you didn't write.
 - **What it solves.** A flat spreadsheet repeats facts, so the same customer can have two addresses and totals drift. Normalization removes those contradictions before a model ever reads the data.
 - **Alternatives.** D1 (SQLite) works for smaller data, and we keep it for sign-in. Supabase or another hosted Postgres works the same way. Document databases are weaker at the joins and totals business questions need.
+
+**In the Agent Factory Stack.** Neon Postgres becomes the stack's system of record here. See [Why these foundations](../docs/agent-factory-stack.md#why-these-foundations) in the stack guide.
 
 ## What you will learn
 
@@ -67,7 +69,7 @@ The step 4 server, now backed by Neon. Its migrations load a flat spreadsheet of
 - **Migrations**: Numbered SQL files that change the schema once, in order, so every database ends up the same.
 - **Fixed SQL behind tools**: Tools run queries you wrote and reviewed, with parameters, so the model can never run arbitrary SQL.
 
-## Planned outline
+## Outline
 
 1. Why a relational database, and connecting the Worker to Neon
 2. Tables, rows and keys
@@ -85,14 +87,14 @@ The step 4 server, now backed by Neon. Its migrations load a flat spreadsheet of
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo. In this step, ask Claude to explain every SQL statement, and predict each result before you run it.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)). In this step, ask Claude to explain every SQL statement, and predict each result before you run it.
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 4 code into `step-05-relational-databases/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 4 code into `step-05-relational-databases/`.**
 
 ```text
-Copy my step-04 code into step-05-relational-databases/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-05 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
+Copy my step-04 code into step-05-relational-databases/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-05 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
 ```
 
 **2. Create a Neon project in the Neon console, then switch to plan mode and plan the change.**
@@ -134,22 +136,24 @@ Apply the migrations to a fresh Neon branch, set the secret, deploy, and give me
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-05-relational-databases/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only, and no Neon connection string)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] The migrations run cleanly on a fresh Neon branch
 - [ ] NOTES.md has the 1NF, 2NF and 3NF walkthrough and the ER diagram
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-05-done && git push origin step-05-done`
-- [ ] Submitted in the form: fork URL, tag `step-05-done`, live server URL, and screenshots of the model explaining your schema and answering a business question in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing the model explaining your schema and answering a business question in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-05-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

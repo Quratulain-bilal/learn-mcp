@@ -1,23 +1,23 @@
 # Step 07: Multi-Tenant MCP Servers and Databases
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Almost every server you build for a client, and every product you sell, serves many companies from one deployment. Each company (a *tenant*) has its own people, settings and data, and no tenant may ever see another's. Steps 4 to 6 gave every user a company, put an `org_id` on every row and turned on row-level security. This step makes multi-tenancy the architecture of the whole server: you choose an isolation model for each kind of customer, carry one tenant context through every tool call, give each company its own settings and sign-in, build tenant-scoped helpers that every later step reuses for keys, Durable Objects, queue messages, Workflow runs, tasks and events, and prove isolation with a cross-tenant test suite.
+
+> 🏬 **Stockroom's ask:** Stockroom is signing many small distributors on a shared plan and one large retailer that insists on its own database and its own sign-in. One deployment must serve them all, and a single leak between them would end Stockroom's business.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [18.9 What a tenant is](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
-- [18.10 Where the tenant comes from](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/where-the-tenant-comes-from/). The company comes from the verified token, never from what the model sends.
-- [18.12 What else carries the company](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-else-carries-the-company/). Keys, caches, logs and background work must carry the company too.
-- [18.14 A company's life, in the sign-in server](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/a-companys-life/). Creating a company, inviting and removing members, and closing it.
-- [19.7 Three ways to keep data apart](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/three-ways-to-keep-data-apart/). Shared tables, a schema per company or a database per company, and when to use each.
-- [19.9 One company per transaction](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Setting the company for one transaction only, so a pooled connection never leaks it.
-- [19.11 Each company's own rules and data](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/each-companys-own-rules-and-data/). Per-company settings and rules without per-company code.
-- [19.12 Proving the data stays apart](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/proving-the-data-stays-apart/). Tests that try to cross the line, and must fail.
+- [18.9 How does one connector serve many companies?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
+- [18.10 Which company is this request for?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/where-the-tenant-comes-from/). The company comes from the verified token, never from what the model sends.
+- [18.12 What can still leak after the token is checked?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-else-carries-the-company/). Keys, caches, logs and background work must carry the company too.
+- [18.14 How does a company come in, change and leave?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/a-companys-life/). Creating a company, inviting and removing members, and closing it.
+- [19.7 Shared tables, or a database per company?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/three-ways-to-keep-data-apart/). Shared tables, a schema per company or a database per company, and when to use each.
+- [19.9 What if the last call's company is still set?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Setting the company for one transaction only, so a pooled connection never leaks it.
+- [19.11 How does each company keep its own rules and data?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/each-companys-own-rules-and-data/). Per-company settings and rules without per-company code.
+- [19.12 How do you prove the data stays apart?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/proving-the-data-stays-apart/). Tests that try to cross the line, and must fail.
 - [Field guide F9, The multi-tenant sign-in checklist](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/field-guide-securing-connectors/#f9-the-multi-tenant-sign-in-checklist) and [F7, The multi-tenant data checklist](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f7-the-multi-tenant-data-checklist). The checks you will turn into tests.
-- *Optional:* [18.13 Proving the sign-in keeps companies apart](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/proving-the-sign-in-keeps-companies-apart/) and [19.10 Where the guarantee stops](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/where-the-guarantee-stops/). What row-level security does not cover.
+- *Optional:* [18.13 How do you prove companies stay apart?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/proving-the-sign-in-keeps-companies-apart/) and [19.10 What can still leak when the rows are safe?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/where-the-guarantee-stops/). What row-level security does not cover.
 
 **Official docs.** Keep these open while you build:
 
@@ -39,6 +39,8 @@ Clients rarely want a server for one person. A distributor wants one for every b
 - **Why an MCP server uses it.** An MCP server acts for signed-in people at many companies, and the model can be steered by any text it reads. The company must therefore come from the token, never from tool input, and every store and message must carry it, so no tool call, background job or event can cross from one company to another.
 - **What it solves.** Data leaks between customers, per-customer forks of the code, enterprise customers who need their own sign-in or their own database, and noisy neighbours that slow everyone down.
 - **Alternatives.** A separate deployment per customer (simple isolation, but every update ships many times and costs grow per customer), or a database per tenant for everyone (strong isolation, harder migrations and higher cost). Most products use shared tables by default and a dedicated database only for customers who pay or must comply.
+
+**In the Agent Factory Stack.** Tenant isolation spans every layer of the stack, from the verified token in Better Auth to row-level security in Neon. See [Where each technology appears in this bootcamp](../docs/agent-factory-stack.md#where-each-technology-appears-in-this-bootcamp) in the stack guide.
 
 ## What you will learn
 
@@ -73,7 +75,7 @@ The step 6 sales server, made multi-tenant by design:
 - **Noisy neighbour**: One tenant's heavy use slowing everyone, handled with per-company limits and, if needed, a dedicated tier.
 - **Cross-tenant test**: A test that acts as one company and tries to reach another's data, and passes only if it fails.
 
-## Planned outline
+## Outline
 
 1. Tenants, and the three ways to keep their data apart
 2. Choosing an isolation model per kind of customer
@@ -92,14 +94,14 @@ The step 6 sales server, made multi-tenant by design:
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 6 code into `step-07-multi-tenancy/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 6 code into `step-07-multi-tenancy/`.**
 
 ```text
-Copy my step-06 code into step-07-multi-tenancy/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-07 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-07 from my step-06 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-06 code into step-07-multi-tenancy/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-07 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-07 from my step-06 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and write the tenancy decision record.**
@@ -108,7 +110,7 @@ Copy my step-06 code into step-07-multi-tenancy/ so I can build on it. Copy only
 Read the Neon multitenancy guide and the book lessons linked in this step. Compare shared schema with row-level security, schema per tenant, and database (or Neon project) per tenant on isolation, cost, migrations, noisy neighbours, backups and compliance. Recommend shared schema with RLS for most companies and a dedicated Neon database for an enterprise tier, and write the comparison and decision to step-07-multi-tenancy/TENANCY.md. Then list every place this server touches company data (tools, resources, prompts, KV, logs) and plan how each gets the tenant context. Don't change code yet.
 ```
 
-**3. One tenant context per request.**
+**3. One tenant context per request.** Book lesson 18.14 notes that a removed person's token keeps working until it runs out (up to 10 minutes in the book's example). This step closes that gap by checking membership and role against the database on every request.
 
 ```text
 Add a tenant module that resolves { orgId, userId, role, tier } once per request and passes it to every tool, resource and prompt handler. The company comes only from the verified token: the user picks it when they connect, and a token speaks for one company for its whole life. On every request, check that the user is still a member of that company and read their current role from the membership table, so a removed member or a demoted admin loses access on the next call. Membership decides which company's data a call may touch; the role decides what the call may do there. Add negative tests: a removed member's token, a demoted admin calling an admin tool, and a tool argument that names another company. No tool may accept an org_id or user_id as input. Add helpers tenantKey(ctx, ...parts) for KV keys, tenantObjectName(ctx) for Durable Object names, and a TenantEnvelope type ({ orgId, userId, requestId }) for later queue messages, Workflow params, tasks and events, with unit tests.
@@ -147,23 +149,25 @@ Deploy, then give me prompts to try in Claude and ChatGPT as two users in differ
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 - The cross-tenant suite in `tests/tenancy/`
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-07-multi-tenancy/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only, and no Neon connection strings)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] TENANCY.md has the isolation-model comparison, your decision and the test results
 - [ ] Tenant isolation: the cross-tenant suite passes for a shared-tier and a dedicated-tier company, and no tool accepts a company or user ID as input
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-07-done && git push origin step-07-done`
-- [ ] Submitted in the form: fork URL, tag `step-07-done`, live server URL, and screenshots of two users in different companies each seeing only their own data, and of a cross-company request being refused, in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing two users in different companies each seeing only their own data, and of a cross-company request being refused, in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-07-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

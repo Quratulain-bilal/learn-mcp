@@ -16,5 +16,5 @@ To update, copy `plugins/mcp-server-dev/skills/*` from a newer commit of that re
 folders and update the commit hash above.
 
 **Known difference:** `build-mcp-server/references/deploy-cloudflare-workers.md` still uses Cloudflare's
-`McpAgent` class, which Cloudflare has since deprecated. The course steps use the stateless
+`McpAgent` class, which Cloudflare has since deprecated. The bootcamp steps use the stateless
 `createMcpHandler` instead, and their prompts say so; follow the step prompts where they differ.

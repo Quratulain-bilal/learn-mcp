@@ -1,20 +1,20 @@
 # Step 14: Long-Running Work with Tasks
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Handle work that takes longer than a single request, such as reports, imports and batch jobs, using the MCP Tasks extension so the client can start, track and retrieve results later. The work itself keeps running on the Cloudflare Workflow you built in step 13, and Tasks becomes the standard MCP face for it.
+
+> 🏬 **Stockroom's ask:** Stockroom wants its long jobs to appear as standard MCP tasks, so Claude can track progress and fetch the result without Stockroom's own status tools.
 
 > **Note:** Tasks (`io.modelcontextprotocol/tasks`) is a Beta extension on its way into the core spec. Anthropic announced on November 24, 2026 that Tasks is generally available in Claude and Claude Code for Pro, Max and Ultra plans, and still rolling out to Team and Enterprise. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) for ChatGPT and other clients, and keep the step 13 tools as the fallback.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-> **Note:** The book covers the Tasks extension in one section of lesson 20.15 and as an optional lab task, not in a full lesson yet. Use the [MCP Tasks docs](https://modelcontextprotocol.io/extensions/tasks/overview) to fill the gaps.
+> **Note:** The book covers the Tasks extension in one section of lesson 20.14 and as an optional lab task, not in a full lesson yet. Use the [MCP Tasks docs](https://modelcontextprotocol.io/extensions/tasks/overview) to fill the gaps.
 
-- [20.15 Machines with no person, section "What is the Tasks extension?"](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/machines-with-no-person/). Task handles, `tasks/get` and `input_required`.
+- [20.14 How does a program sign in with no person?, section "What is the Tasks extension?"](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/machines-with-no-person/#what-is-the-tasks-extension). Task handles, `tasks/get` and `input_required`.
 - [14.8 Async and await](https://agentfactory.panaversity.org/building-ai-workers/structuring-programs/async-and-await/). Waiting on long work.
-- [20.1 What an MCP extension is](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/what-an-mcp-extension-is/). Tasks is in beta, and how fallbacks work.
+- [20.1 What is an MCP extension?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/what-an-mcp-extension-is/). Tasks is in beta, and how fallbacks work.
 
 **Official docs.** Keep these open while you build:
 
@@ -39,6 +39,8 @@ Real business operations don't always finish in seconds. In step 13 the model ha
 - **What it solves.** Every server inventing its own start-and-check tools, and long calls that time out or block the conversation.
 - **Alternatives.** Custom status tools (kept as the fallback for clients without Tasks support) or progress notifications on a long-held request, which still times out.
 
+**In the Agent Factory Stack.** Tasks put an MCP protocol face on the step 13 Workflow, so one capability spans two layers of the stack. See [Cloudflare services, one at a time](../docs/agent-factory-stack.md#cloudflare-services-one-at-a-time) in the stack guide.
+
 ## What you will learn
 
 - Understand the task lifecycle: create, poll or notify, complete, retrieve the result
@@ -62,7 +64,7 @@ The step 13 `generate_sales_report` Workflow, now exposed as an MCP task: starti
 - **Progress and cancellation**: Keeping the user informed and in control.
 - **Fallback tools**: Plain start and status tools for clients that don't support Tasks yet.
 
-## Planned outline
+## Outline
 
 1. Why synchronous tools fall short
 2. The Tasks extension
@@ -77,14 +79,14 @@ The step 13 `generate_sales_report` Workflow, now exposed as an MCP task: starti
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 13 code into `step-14-tasks/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 13 code into `step-14-tasks/`.**
 
 ```text
-Copy my step-13 code into step-14-tasks/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-14 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-14 from my step-13 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-13 code into step-14-tasks/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-14 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-14 from my step-13 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Check the Tasks extension's current client support, then plan.**
@@ -102,7 +104,7 @@ Make generate_sales_report task-based: starting it creates a Workflow instance a
 **4. Add progress and cancellation.**
 
 ```text
-Report progress from the Workflow's steps, support cancellation by terminating the Workflow instance, and return the saved report as the task's result. When a report would cover more than a year of orders, move the task to input_required with an elicitation form that states the size and asks the user to confirm, have the Workflow wait for the answer (step.waitForEvent), and continue or cancel when the client sends it with tasks/update. Check that the answer comes from the same company and user who started the task.
+Report progress from the Workflow's steps, support cancellation by terminating the Workflow instance, and return the saved report as the task's result. When a report would cover more than a year of orders, move the task to input_required with an elicitation form that states the size and asks the user to confirm, have the Workflow wait for the answer (step.waitForEvent), and continue or cancel when the client sends it with tasks/update. Check that the answer comes from the same company and user who started the task, and that this user is still a member of that company when the answer arrives (a task whose user was removed while it waited is cancelled with a clear reason).
 ```
 
 **5. Show it in the UI.**
@@ -120,21 +122,24 @@ Add tests that a task ID from another company is refused and that cancelling a t
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-14-tasks/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tenant isolation: a task ID from another company is refused by `tasks/get` and by cancel
+- [ ] Authority at run time: a test removes the user while the task waits in `input_required`, and the task is cancelled instead of continuing
 - [ ] It works in claude.ai or Claude Desktop. If Claude doesn't support this extension yet, the rest of the server still works there and your NOTES.md records the support status from the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix)
-- [ ] It works in ChatGPT (developer mode), with the same exception and NOTES.md entry if ChatGPT doesn't support this extension yet
-- [ ] Tagged and pushed: `git tag step-14-done && git push origin step-14-done`
-- [ ] Submitted in the form: fork URL, tag `step-14-done`, live server URL, and screenshots of a report task running and finishing (or a note on client support if it isn't available yet) in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server), with the same exception and NOTES.md entry if ChatGPT doesn't support this extension yet
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing a report task running and finishing (or a note on client support if it isn't available yet) in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-14-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

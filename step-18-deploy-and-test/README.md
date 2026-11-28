@@ -1,18 +1,17 @@
 # Step 18: Deploying and Testing on claude.ai, Claude Desktop and ChatGPT
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Take the server to production on Cloudflare and verify it properly across all target clients: separate environments, a custom domain, secrets per environment, a CI pipeline that runs the step 17 tests and gates each deploy, safe releases with rollbacks, and a cross-client test plan.
+
+> 🏬 **Stockroom's ask:** Stockroom is going live with paying customers. It needs staging and production, safe releases with a rollback, and proof that everything works in each AI app its customers use.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [17.8 Putting a connector online safely](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/securing-a-remote-server/). Access keys, Origin checks and staging.
+- [17.8 How do you put a connector online safely?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/securing-a-remote-server/). Access keys, Origin checks and staging.
 - [Field guide F6, Deploying to Cloudflare Workers](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/field-guide-connectors/#f6-deploying-to-cloudflare-workers). Deploying step by step.
-- [17.6 Specify, generate, verify](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/specify-generate-verify/). Testing what the agent built.
-- [20.18 How today's tools realize it](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-todays-tools-realize-it/). What Claude and ChatGPT support today.
-- [MCP Apps field guide F2 ChatGPT in detail and F5 Testing a page](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/field-guide-mcp-apps/#f2-chatgpt-in-detail). Connecting and testing in ChatGPT.
+- [17.6 How do you trust a connector an agent wrote?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/specify-generate-verify/). Testing what the agent built.
+- [20.16 How do today's products do this?, "How to show your connector's screen in your app"](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-todays-tools-realize-it/#how-to-show-your-connectors-screen-in-your-app) and [MCP Apps field guide F1, Testing a page](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/field-guide-mcp-apps/#f1-testing-a-page). What Claude and ChatGPT support today, and how to connect and test in each, step by step.
 
 **Official docs.** Keep these open while you build:
 
@@ -36,6 +35,8 @@ A server that works on your laptop isn't done. This step covers what it takes to
 - **What it solves.** Releasing untested changes straight to clients, not knowing why a tool call failed, and client-specific bugs that only users discover.
 - **Alternatives.** Other CI/CD services, Cloudflare's own Git integration (Workers Builds), or deploying by hand from a laptop, which doesn't scale past one developer and one client.
 
+**In the Agent Factory Stack.** Before a production deploy, know which parts of the stack move with you and which tie you to Cloudflare. See [The honest trade-off: lock-in](../docs/agent-factory-stack.md#the-honest-trade-off-lock-in) in the stack guide.
+
 ## What you will learn
 
 - Set up separate dev, staging and production environments with Wrangler
@@ -56,7 +57,7 @@ A production deployment of the sales server on a custom domain, staging and prod
 - **Rollback**: Returning production to the previous version in one step.
 - **Cross-client testing**: Same server, different hosts. Verify behavior in each.
 
-## Planned outline
+## Outline
 
 1. Environments and custom domains
 2. Secrets and configuration
@@ -72,14 +73,14 @@ A production deployment of the sales server on a custom domain, staging and prod
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 17 code into `step-18-deploy-and-test/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 17 code into `step-18-deploy-and-test/`.**
 
 ```text
-Copy my step-17 code into step-18-deploy-and-test/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-18 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-18 from my step-17 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-17 code into step-18-deploy-and-test/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-18 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-18 from my step-17 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Plan the production setup.**
@@ -115,21 +116,24 @@ Create a release checklist covering versioning, changelog, gradual rollout, roll
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-18-deploy-and-test/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tenant isolation: the cross-tenant suite passes against staging before each production release, and no tenant data or settings are shared between environments
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-18-done && git push origin step-18-done`
-- [ ] Submitted in the form: fork URL, tag `step-18-done`, live server URL, and screenshots of your production server passing the cross-client test plan in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Project defence recorded (up to five minutes: it works, one tool end to end, one tenant-isolation decision, one change you made; see [SUBMITTING.md](../SUBMITTING.md#10-defend-your-project)) and its link added to this step's NOTES.md
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing your production server passing the cross-client test plan in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-18-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

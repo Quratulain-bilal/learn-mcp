@@ -1,19 +1,19 @@
 # Step 08: Search by Meaning with pgvector: Answers That Cite or Abstain
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Clients' questions are often about their documents, not their tables: "can I give a 15% discount to a new customer?", "what's our returns rule for opened items?", "do we sell anything for cold storage?". Searching for the same words misses most of these, because people don't use the policy's exact words. In this step your MCP server searches by **meaning** with **pgvector**, the Postgres add-on for embeddings, inside the same Neon database, the same tables and the same row-level security as the rest of the business data. Every answer cites the document and line it came from, the search **abstains** when nothing is close enough, and a fixed question set measures retrieval so a change that makes it worse fails the build.
+
+> 🏬 **Stockroom's ask:** Customers keep asking questions their tables can't answer: discount rules, return policies, what the catalog says about cold storage. Stockroom wants answers from each customer's own documents, with the source cited, and an honest "not covered" when nothing fits.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [19.13 Retrieval from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/retrieval-from-zero/). Passages, embeddings, vectors, similarity search and an index, with every search kept inside one company.
-- [19.14 Embeddings and pgvector in depth: predict, then run](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/embeddings-and-pgvector-in-depth/). Cosine distance, what embeddings miss, search by words beside search by meaning, and what a vector costs.
-- [19.15 Answers that cite, or abstain](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/answers-that-cite-or-abstain/). Citations, a threshold, and saying plainly when the documents don't answer.
-- [19.16 Measuring retrieval](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/measuring-retrieval/). A fixed question set that fails the build before a user sees a wrong citation.
+- [19.13 How does a search find a rule by its meaning?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/retrieval-from-zero/). Passages, embeddings, vectors, similarity search and an index, with every search kept inside one company.
+- [19.14 Where does a search by meaning go wrong?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/embeddings-and-pgvector-in-depth/). Cosine distance, what embeddings miss, search by words beside search by meaning, and what a vector costs.
+- [19.15 What if the policies do not answer the question?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/answers-that-cite-or-abstain/). Citations, a threshold, and saying plainly when the documents don't answer.
+- [19.16 How do you know the search still works?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/measuring-retrieval/). A fixed question set that fails the build before a user sees a wrong citation.
 - [Field guide F4, Embeddings and vectors from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f4-embeddings-and-vectors-from-zero). The book's model (`bge-m3` on Workers AI, 1,024 dimensions), its free allowance, and a test embedder for CI.
-- *Refresh:* [19.8 Row-level security](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/row-level-security/) and [19.9 One company per transaction](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Passages and embeddings live under the same rules as every other row.
+- *Refresh:* [19.8 What if a query forgets its company filter?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/row-level-security/) and [19.9 What if the last call's company is still set?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Passages and embeddings live under the same rules as every other row.
 
 **Official docs.** Keep these open while you build:
 
@@ -33,6 +33,8 @@ A model that answers a policy question from memory, or from the closest wrong ru
 - **Why an MCP server uses it.** The model can only answer from what your tools return. A search tool that returns the right passages, with their document and line, lets the model answer from the client's own documents and cite them, in Claude and ChatGPT alike.
 - **What it solves.** Questions phrased in the user's words rather than the document's ("PO" for "purchase order"), answers no one can check, confident answers to questions the documents don't cover, and a separate vector database with its own copy of every company's data.
 - **Alternatives.** A dedicated vector database (another service, another copy of the data and another place to enforce tenancy), search by words only (misses meaning), or putting whole documents in the prompt (costly, and the citation points at nothing). The book keeps vectors in Postgres with pgvector, so one database and one set of rules covers both.
+
+**In the Agent Factory Stack.** pgvector is the stack's search by meaning, kept inside the system of record instead of a separate vector database such as Vectorize. See [Why these foundations](../docs/agent-factory-stack.md#why-these-foundations) in the stack guide.
 
 ## What you will learn
 
@@ -68,7 +70,7 @@ The step 7 multi-tenant sales server, now with search by meaning:
 - **Hybrid search**: Search by words and by meaning, merged. Worth adding only when the question set shows it helps, for example with product codes.
 - **Vector index (HNSW)**: An index that finds near neighbours fast on large tables, at the cost of exactness. Check with `EXPLAIN` whether it is used.
 
-## Planned outline
+## Outline
 
 1. Search by words versus search by meaning
 2. Passages, embeddings and pgvector on Neon
@@ -87,14 +89,14 @@ The step 7 multi-tenant sales server, now with search by meaning:
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo. As in step 5, predict what each query and search returns before you run it.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)). As in step 5, predict what each query and search returns before you run it.
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 7 code into `step-08-semantic-search-pgvector/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 7 code into `step-08-semantic-search-pgvector/`.**
 
 ```text
-Copy my step-07 code into step-08-semantic-search-pgvector/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-08 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-08 from my step-07 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-07 code into step-08-semantic-search-pgvector/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-08 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-08 from my step-07 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and plan retrieval.**
@@ -142,23 +144,26 @@ Show me with EXPLAIN whether a search uses a vector index at this size, add an H
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 - The retrieval question set, in CI
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-08-semantic-search-pgvector/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only, and no Neon connection strings or API tokens)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] `evals/retrieval.json` runs in CI, and NOTES.md records found-in-the-top-three, abstentions and the threshold you chose
 - [ ] Tenant isolation: passages and embeddings are under forced row-level security, and a test proves one company's search never returns another company's passage
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-08-done && git push origin step-08-done`
-- [ ] Submitted in the form: fork URL, tag `step-08-done`, live server URL, and screenshots of a cited policy answer and an abstention in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Project defence recorded (up to five minutes: it works, one tool end to end, one tenant-isolation decision, one change you made; see [SUBMITTING.md](../SUBMITTING.md#10-defend-your-project)) and its link added to this step's NOTES.md
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing a cited policy answer and an abstention in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-08-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

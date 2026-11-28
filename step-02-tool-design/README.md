@@ -1,18 +1,18 @@
 # Step 02: Designing Good Tools
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Learn to design tools that models use correctly. That means clear names and descriptions, tight input schemas, structured outputs, sensible granularity, and annotations that tell the host which tools are safe.
+
+> 🏬 **Stockroom's ask:** Stockroom's first feature is account notes for its customers' sales reps ("called Ali at Karachi Foods, wants a price list on Friday"). Before any of it is real data, Stockroom wants notes tools the model calls correctly every time, because a wrong call in front of a customer's staff costs trust.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [17.2 A tool is its description](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/a-tool-is-its-description/). The model chooses tools from their names, descriptions and schemas.
-- [17.3 Errors that say what to do next](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/errors-that-say-what-to-do-next/). Writing errors the model can recover from.
+- [17.2 How does the model pick the right tool?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/a-tool-is-its-description/). The model chooses tools from their names, descriptions and schemas.
+- [17.3 What should a tool say when it fails?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/errors-that-say-what-to-do-next/). Writing errors the model can recover from.
 - [14.5 What a schema holds, and what it lets through](https://agentfactory.panaversity.org/building-ai-workers/structuring-programs/schema-rules/). Validating input with Zod-style schemas.
-- [17.4 Stateless servers](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/stateless-servers/). Why tools on Workers must not keep state between calls.
-- [17.7 Untrusted output, and data that should not leave](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/untrusted-output/). What a tool should and should not return.
+- [17.4 What if a different copy answers the next call?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/stateless-servers/). Why tools on Workers must not keep state between calls.
+- [17.7 What if a record tells the AI what to do?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/untrusted-output/). What a tool should and should not return.
 
 **Official docs.** Keep these open while you build:
 
@@ -23,7 +23,7 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 
 ## Why this step matters
 
-A server is only as good as the model's ability to use it. Poorly described or overly broad tools lead to wrong calls, wasted tokens and confused users. Tool design matters more than anything else in this course, and the later steps (database, UI, tasks) all depend on it.
+A server is only as good as the model's ability to use it. Poorly described or overly broad tools lead to wrong calls, wasted tokens and confused users. Tool design matters more than anything else in this bootcamp, and the later steps (database, UI, tasks) all depend on it.
 
 ## Why this technology in an MCP server: Good tool design, and Workers KV for shared state
 
@@ -31,6 +31,8 @@ A server is only as good as the model's ability to use it. Poorly described or o
 - **Why an MCP server uses it.** The model never reads your code. It chooses and calls tools only from their names, descriptions and schemas, so tool design *is* the interface of an MCP server. And because Cloudflare may run many copies of your Worker, any data that must survive between tool calls needs a shared store, not the Worker's memory.
 - **What it solves.** Well-designed tools mean fewer wrong calls, fewer wasted tokens and safer confirmations, since annotations tell the host which tools change data. KV keeps the notes alive across requests and copies.
 - **Alternatives.** For storage: D1 or Postgres (more than a notes demo needs, and used for real data from step 5), or Durable Objects when data must be strongly consistent (step 11). There is no alternative to good tool design.
+
+**In the Agent Factory Stack.** Well-described tools are the business capabilities a connector-native app exposes in place of a website and a REST API, and Workers KV is the first Cloudflare service you add. See [From a traditional app to a connector-native app](../docs/agent-factory-stack.md#from-a-traditional-app-to-a-connector-native-app) in the stack guide.
 
 ## What you will learn
 
@@ -54,7 +56,7 @@ We refactor the step 1 server into a small "notes" toolset (`list_notes`, `get_n
 - **Annotations**: Hints about side effects that hosts use for confirmation prompts.
 - **Stateless servers**: Cloudflare may run many copies of your Worker, so anything kept in memory can vanish between calls. The notes go in Workers KV, a key-value store every copy can read. KV is eventually consistent (a change can take up to a minute to reach other regions), which is fine for notes. Business data moves to Postgres in step 5.
 
-## Planned outline
+## Outline
 
 1. Anatomy of a tool definition
 2. Naming and describing tools
@@ -72,14 +74,14 @@ We refactor the step 1 server into a small "notes" toolset (`list_notes`, `get_n
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 1 code into `step-02-tool-design/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 1 code into `step-02-tool-design/`.**
 
 ```text
-Copy my step-01 code into step-02-tool-design/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-02 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
+Copy my step-01 code into step-02-tool-design/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-02 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
 ```
 
 **2. Review how the tools are defined today.**
@@ -121,20 +123,22 @@ Deploy, then give me five realistic prompts to try in Claude and ChatGPT that ch
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-02-tool-design/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-02-done && git push origin step-02-done`
-- [ ] Submitted in the form: fork URL, tag `step-02-done`, live server URL, and screenshots of the model choosing the right notes tool in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing the model choosing the right notes tool in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-02-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

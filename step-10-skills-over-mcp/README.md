@@ -1,18 +1,18 @@
 # Step 10: Skills over MCP
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Ship *know-how* along with tools. Skills over MCP lets a server provide packaged instructions (skills) that teach the model how to use the server's tools well for specific tasks. Because the skills live on the server, you update them whenever you update the tools, and users install nothing. And because your server already knows who is calling and which company they belong to, it can do something a plugin can't: serve a shared playbook to everyone *and* a skill built for each company.
+
+> 🏬 **Stockroom's ask:** Every Stockroom customer sells a little differently. Stockroom wants one shared sales-review playbook for everyone, plus each customer's own targets, terms and sign-off rules, served only to that customer.
 
 > **Note:** Skills over MCP (`io.modelcontextprotocol/skills`) is a Beta extension. Anthropic announced public beta support in Claude and Claude Code on November 24, 2026: on by default for Pro, Max and Ultra plans, enabled by an admin on Team plans, with Enterprise to follow. ChatGPT has partial support. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix) for the latest status.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
 - [16.1 From a prompt you repeat to a skill](https://agentfactory.panaversity.org/building-ai-workers/skills-and-plugins/from-a-prompt-to-a-skill/). What a skill is.
-- [20.12 Skills that travel with the server](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/skills-that-travel-with-the-server/). The Skills over MCP extension.
-- [20.13 Approving a skill from a server](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/approving-a-skill-from-a-server/). How trust and approval work.
+- [20.11 How does a skill travel with the connector?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/skills-that-travel-with-the-server/). The Skills over MCP extension.
+- [20.12 Who approves a skill from a server?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/approving-a-skill-from-a-server/). How trust and approval work.
 - *Optional:* [16.9 Installing is a trust decision](https://agentfactory.panaversity.org/building-ai-workers/skills-and-plugins/installing-is-a-trust-decision/). Why adding a skill is a trust decision.
 
 **Official docs.** Keep these open while you build:
@@ -38,6 +38,8 @@ Tools say *what* a model can do, and skills say *how* to do a job well. Serving 
 - **What it solves.** Long, procedural tool descriptions that bloat the model's context, and inconsistent results because each user prompts differently. Skills load only when needed (progressive disclosure). And because the server authenticates every caller, it can serve each company a skill tailored to it, such as its own targets and sign-off steps.
 - **Alternatives.** Putting the procedure in tool descriptions (costly in context), MCP prompts (templates the user picks), or asking users to install a skill in their own client separately.
 
+**In the Agent Factory Stack.** Skills over MCP is part of the stack's protocol layer, served from the same Worker. See [The stack at a glance](../docs/agent-factory-stack.md#the-stack-at-a-glance) in the stack guide.
+
 ## What you will learn
 
 - Understand what a skill is (instructions plus optional resources) and when the model loads one
@@ -61,7 +63,7 @@ A shared `monthly-sales-review` skill that guides the model through querying Neo
 - **Skill approval**: Skill text steers the model, so the client checks a skill and may ask the user to approve it, and approves it again when its content changes.
 - **Private caching**: Skill lists and contents that depend on the caller are returned with `cacheScope: "private"`, so no shared cache hands one company's skill to another.
 
-## Planned outline
+## Outline
 
 1. What Skills over MCP adds
 2. Defining and serving a skill
@@ -78,14 +80,14 @@ A shared `monthly-sales-review` skill that guides the model through querying Neo
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 9 code into `step-10-skills-over-mcp/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 9 code into `step-10-skills-over-mcp/`.**
 
 ```text
-Copy my step-09 code into step-10-skills-over-mcp/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-10 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-10 from my step-09 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-09 code into step-10-skills-over-mcp/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-10 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-10 from my step-09 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Check the extension's current client support (see the note at the top of this page), then plan.**
@@ -127,21 +129,24 @@ Deploy and give me prompts that should trigger each skill in each client, signed
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-10-skills-over-mcp/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tenant isolation: the shared skill holds no company's data and uses only company-scoped tools, each company's playbook is listed and served only to that company (tested through `skills/list`, `skills/get` and `resources/read`), and per-company results are never cached as public
 - [ ] It works in claude.ai or Claude Desktop. If Claude doesn't support this extension yet, the rest of the server still works there and your NOTES.md records the support status from the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix)
-- [ ] It works in ChatGPT (developer mode), with the same exception and NOTES.md entry if ChatGPT doesn't support this extension yet
-- [ ] Tagged and pushed: `git tag step-10-done && git push origin step-10-done`
-- [ ] Submitted in the form: fork URL, tag `step-10-done`, live server URL, and screenshots of the monthly-sales-review skill and a company playbook in use (or a note on client support if it isn't available yet) in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server), with the same exception and NOTES.md entry if ChatGPT doesn't support this extension yet
+- [ ] Project defence recorded (up to five minutes: it works, one tool end to end, one tenant-isolation decision, one change you made; see [SUBMITTING.md](../SUBMITTING.md#10-defend-your-project)) and its link added to this step's NOTES.md
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing the monthly-sales-review skill and a company playbook in use (or a note on client support if it isn't available yet) in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-10-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

@@ -1,19 +1,19 @@
 # Step 11: Per-User State with Durable Objects
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Some state can't wait a minute to be consistent and doesn't belong in the business database: a draft order a user builds over several tool calls, or a count of how many times they called a write tool this minute. Your MCP server keeps that kind of state in Cloudflare Durable Objects. A Durable Object is one named object (for example, one per user) with its own storage, and every request for that name reaches the same object, so reads and writes are strongly consistent. The objects are defined and bound inside the same Worker that serves `/mcp`, and the server's tools call them.
+
+> 🏬 **Stockroom's ask:** Reps build an order over several messages, and one customer's script once hammered the write tools. Stockroom wants a draft order that survives between messages and an exact per-user rate limit.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
 > **Note:** The book mentions Durable Objects only in passing (in the connectors field guide), not in a lesson yet. The lessons below give the ideas this step relies on. Use the [Durable Objects docs](https://developers.cloudflare.com/durable-objects/) for the feature itself.
 
-- [17.4 Stateless servers](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/stateless-servers/). Why the Worker keeps nothing in memory, and why state needs a shared place every copy can reach.
-- [17.9 Charging for a connector](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/charging-for-a-connector/). A plan check on every call, which needs an exact per-user count.
-- [18.11 One order slip per request](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/one-order-slip-per-request/). Nothing on a shared note, and where call counts for rate limits belong.
-- *Optional:* [19.9 One company per transaction](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Keeping one user's state from leaking into another's.
+- [17.4 What if a different copy answers the next call?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/stateless-servers/). Why the Worker keeps nothing in memory, and why state needs a shared place every copy can reach.
+- [17.9 How do you charge for a connector?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/charging-for-a-connector/). A plan check on every call, which needs an exact per-user count.
+- [18.11 Can one company's answer reach another by accident?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/one-order-slip-per-request/). Nothing on a shared note, and where call counts for rate limits belong.
+- *Optional:* [19.9 What if the last call's company is still set?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Keeping one user's state from leaking into another's.
 
 **Official docs.** Keep these open while you build:
 
@@ -31,6 +31,8 @@ Client servers need limits and multi-call flows: "no more than 20 orders a minut
 - **Why an MCP server uses it.** The Worker is stateless and KV can be briefly out of date, but some MCP state must be exact: a draft order built over several tool calls, a rate limit, a user's event subscriptions. A Durable Object gives each user that exact state right next to your server. Cloudflare's handler docs point to Durable Objects for exactly this: durable data behind an authenticated handle, while the MCP handler itself stays stateless.
 - **What it solves.** Lost or conflicting state across tool calls, and limits that two parallel calls could both slip past.
 - **Alternatives.** Rows in Postgres with locking (slower and adds database load), an external store such as Redis, or Cloudflare's built-in rate-limiting binding for simple limits.
+
+**In the Agent Factory Stack.** Durable Objects are one of the Cloudflare services the stack adds only when a step needs them, and one of the parts that ties you to Cloudflare. See [Cloudflare services, one at a time](../docs/agent-factory-stack.md#cloudflare-services-one-at-a-time) in the stack guide.
 
 ## What you will learn
 
@@ -53,7 +55,7 @@ A `UserState` Durable Object, one per signed-in user, that holds a draft order a
 - **Alarms**: A timer an object sets for itself, used here to expire stale drafts.
 - **Right tool for the job**: Durable Objects for small per-key state, Neon for business records, KV for data that can be a little stale.
 
-## Planned outline
+## Outline
 
 1. Where state is allowed in a stateless server
 2. Durable Objects in one picture
@@ -71,14 +73,14 @@ A `UserState` Durable Object, one per signed-in user, that holds a draft order a
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 10 code into `step-11-durable-objects/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 10 code into `step-11-durable-objects/`.**
 
 ```text
-Copy my step-10 code into step-11-durable-objects/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-11 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-11 from my step-10 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-10 code into step-11-durable-objects/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-11 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-11 from my step-10 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and plan the Durable Object.**
@@ -120,21 +122,23 @@ Deploy, then give me prompts to try in Claude and ChatGPT that build a draft ord
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-11-durable-objects/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tenant isolation: every Durable Object is named from the company and user (`org:<orgId>:user:<userId>`), never from tool input, and the cross-tenant suite still passes
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-11-done && git push origin step-11-done`
-- [ ] Submitted in the form: fork URL, tag `step-11-done`, live server URL, and screenshots of a draft order built over several messages and submitted, plus the rate-limit error, in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing a draft order built over several messages and submitted, plus the rate-limit error, in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-11-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

@@ -1,20 +1,20 @@
 # Step 04: Adding Authorization with Better Auth and D1
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Protect the server so that only signed-in users can use it, and so that every tool call knows *who* is calling. We use OAuth with Better Auth, and store users and sessions in Cloudflare D1. We chose Better Auth partly because it supports single sign-on (SSO) through its open-source `@better-auth/sso` plugin, so a client's staff can later sign in with the company account they already have. Every user also belongs to a company (a *tenant*) with a role, because the servers you build for clients serve whole teams, and from here on every step keeps each company's data apart.
+
+> 🏬 **Stockroom's ask:** Stockroom sells to companies, not individuals. Each customer company's staff must sign in and see only their own notes, admins need more rights than members, and Stockroom's bigger prospects already ask whether their staff can sign in with their company accounts (SSO).
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
 - [18.1 Who is calling?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/who-is-calling/). Why a shared key is not enough.
-- [18.2 Sign-in in one picture](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/sign-in-in-one-picture/). The parties in OAuth and the flow that starts with the first 401.
-- [18.3 Finding the door](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/finding-the-door/). How clients discover where to sign in (protected-resource discovery).
-- [18.7 Permission per tool](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/permission-per-tool/). Scopes per tool, 403 responses and step-up.
-- [18.9 What a tenant is](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
+- [18.2 How does signing in become a token?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/sign-in-in-one-picture/). The parties in OAuth and the flow that starts with the first 401.
+- [18.3 Where does the app send you to sign in?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/finding-the-door/). How clients discover where to sign in (protected-resource discovery).
+- [18.7 What may each person do?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/permission-per-tool/). Scopes per tool, 403 responses and step-up.
+- [18.9 How does one connector serve many companies?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
 - [Field guide F3, Better Auth from zero](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/field-guide-securing-connectors/#f3-better-auth-from-zero). Read F2 for D1 as well. Its "Going further: sign in with your company (SSO)" section explains how SSO and the connector's sign-in work together.
-- *Optional:* [20.14 Employees through their company](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/employees-through-their-company/). Enterprise-Managed Authorization: the company's identity provider decides which employees may use a connector, so nobody clicks a consent screen.
+- *Optional:* [20.13 How does a company decide which employees connect?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/employees-through-their-company/). Enterprise-Managed Authorization: the company's identity provider decides which employees may use a connector, so nobody clicks a consent screen.
 
 **Official docs.** Keep these open while you build:
 
@@ -42,6 +42,8 @@ Real servers act on behalf of real users. Claude and ChatGPT both support OAuth 
 - **Why SSO matters for client work.** Enterprise clients usually require their staff to sign in with the company account their IT team manages, so access starts and ends with employment. Better Auth gives you that with an open-source plugin, inside your own Worker and database, instead of a paid identity service. SSO proves who the person is; your server still decides what they may do.
 - **Alternatives.** Hosted identity providers such as Auth0, Clerk, WorkOS or Stytch, or Cloudflare's own OAuth provider library for Workers. We use Better Auth because it supports SSO through an open-source plugin, runs inside your Worker, stores its data in your own database and is what the book teaches.
 
+**In the Agent Factory Stack.** Better Auth is the stack's identity foundation, and the guide explains why it is the one authorization server, rather than running Cloudflare's OAuth provider beside it. See [Two decisions this stack makes for you](../docs/agent-factory-stack.md#two-decisions-this-stack-makes-for-you) in the stack guide.
+
 ## What you will learn
 
 - Understand how MCP authorization works: the server as an OAuth resource server, discovery metadata, and tokens on every request
@@ -66,10 +68,10 @@ The notes server from steps 2 and 3, now behind sign-in. Every user belongs to a
 - **Tenant**: A customer company. One server serves many tenants, and no tenant ever sees another's people or data.
 - **Role**: What a member may do inside their company, such as `member` or `admin`, checked by the server on every call.
 - **Single sign-on (SSO)**: Signing in with the account a person's company already manages, over OIDC or SAML. It proves who they are, and your server still decides what they may do.
-- **Enterprise-Managed Authorization**: An official, stable MCP extension, built with Okta and others, for a world where agents run without someone clicking a consent button. The company's identity provider gives the AI app a pass (an ID-JAG) that your auth server trades for an ordinary token, so an admin decides once which employees may use the server.
+- **Enterprise-Managed Authorization**: An official, stable MCP extension, built with Okta and others, for a world where agents run without someone clicking a consent button. The company's identity provider gives the AI app a pass (an ID-JAG) that your auth server trades for an ordinary token, so an admin decides once which employees may use the server. MCP's maintainers are also drafting authorization extensions that tie a token to the client that requested it and let cloud agents sign in with their own identity, the first steps toward agent identity ([MCP blog](https://blog.modelcontextprotocol.io/posts/mcp-turns-two/)); none of this changes what you build here.
 - **Client registration**: How an AI app identifies itself to your auth server. The 2026-07-28 spec prefers Client ID Metadata Documents (the client's ID is a URL to its own description) over Dynamic Client Registration.
 
-## Planned outline
+## Outline
 
 1. How Claude and ChatGPT authenticate to remote MCP servers
 2. Creating the D1 database and binding it to the Worker
@@ -87,14 +89,14 @@ The notes server from steps 2 and 3, now behind sign-in. Every user belongs to a
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 3 code into `step-04-auth/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 3 code into `step-04-auth/`.**
 
 ```text
-Copy my step-03 code into step-04-auth/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-04 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
+Copy my step-03 code into step-04-auth/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-04 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds.
 ```
 
 **2. Switch to plan mode and plan the auth.**
@@ -148,20 +150,23 @@ Read Better Auth's SSO plugin docs and the "sign in with your company (SSO)" sec
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-04-auth/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-04-done && git push origin step-04-done`
-- [ ] Submitted in the form: fork URL, tag `step-04-done`, live server URL, and screenshots of signing in and using your own notes in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Project defence recorded (up to five minutes: it works, one tool end to end, one tenant-isolation decision, one change you made; see [SUBMITTING.md](../SUBMITTING.md#10-defend-your-project)) and its link added to this step's NOTES.md
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing signing in and using your own notes in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-04-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

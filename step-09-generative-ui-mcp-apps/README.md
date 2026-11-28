@@ -1,18 +1,18 @@
 # Step 09: Generative UI with MCP Apps
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Give the server a face. Tools return interactive React widgets (tables, charts, forms) that render inside the chat in Claude and ChatGPT, and the model picks which widget to show based on what the user asked.
+
+> 🏬 **Stockroom's ask:** Customers' staff find long text tables hard to read in a chat. Stockroom wants real screens (an orders table, a sales chart, an order form) that appear in Claude and ChatGPT when someone asks.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [20.1 What an MCP extension is](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/what-an-mcp-extension-is/). Extensions, their stages and fallbacks.
-- [20.2 When a screen beats text](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/when-a-screen-beats-text/). When a widget is worth it.
-- [20.3 How an MCP App works](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-an-mcp-app-works/). The `ui://` resource, the tool pointer, the sandbox and messaging.
-- [20.6 The sandbox](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/the-sandbox/). What the iframe can and cannot do.
-- [20.9 A text answer behind every screen, in every AI app](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/a-text-answer-behind-every-screen/). Making the same widget work in Claude and ChatGPT.
+- [20.1 What is an MCP extension?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/what-an-mcp-extension-is/). Extensions, their stages and fallbacks.
+- [20.2 When does a screen beat text?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/when-a-screen-beats-text/). When a widget is worth it.
+- [20.3 How does a tool get a screen?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-an-mcp-app-works/). The `ui://` resource, the tool pointer, the sandbox and messaging.
+- [20.6 What can the page reach?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/the-sandbox/). What the iframe can and cannot do.
+- [20.9 What if the AI app shows no screens?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/a-text-answer-behind-every-screen/). Making the same widget work in Claude and ChatGPT.
 
 **Official docs.** Keep these open while you build:
 
@@ -26,17 +26,19 @@ Text is a poor interface for data. MCP Apps is the open standard for interactive
 
 ## Why this technology in an MCP server: MCP Apps (interactive UI in the chat)
 
-- **What it is.** MCP Apps is the MCP extension for interactive UI. The server registers an HTML/JS app as a `ui://` resource, a tool points to it, and the host renders it in a sandboxed frame inside the chat. We build the apps with React.
+- **What it is.** MCP Apps is the MCP extension for interactive UI. The server registers an HTML/JS app as a `ui://` resource, a tool points to it, and the host renders it in a sandboxed frame inside the chat. It grew out of the community's MCP-UI project and OpenAI's Apps SDK, and it was MCP's first official extension, so the same app works in ChatGPT, Claude, Goose and Visual Studio Code. Real products already ship this way: AllTrails, for example, shows hikes on a map right in the chat ([MCP blog](https://blog.modelcontextprotocol.io/posts/mcp-turns-two/)). We build the apps with React.
 - **Why an MCP server uses it.** Text is a poor way to show a table of orders, a chart or a form. MCP Apps lets a tool return a real interface in Claude and ChatGPT, built once with the standard APIs, and lets the widget call tools back through the host.
 - **What it solves.** Users get screens they can read and act on without leaving the chat, and you ship one UI that works in both major clients instead of building a separate web app.
 - **Alternatives.** Client-specific APIs such as ChatGPT-only `window.openai` calls (we avoid them to stay portable), markdown tables or images in text replies, or a separate web app that users have to switch to.
+
+**In the Agent Factory Stack.** MCP Apps widgets are how a connector-native app shows screens without building a website. See [From a traditional app to a connector-native app](../docs/agent-factory-stack.md#from-a-traditional-app-to-a-connector-native-app) in the stack guide.
 
 ## What you will learn
 
 - Explain the MCP Apps model: UI resources, linking a tool to its UI, and the sandboxed iframe
 - Build React widgets and bundle them as `ui://` resources
 - Pass tool results into a widget, and let the widget call tools back
-- Place this step on book lesson 20.10's ladder: here the model picks one fixed screen per request and fills it with data; step 19 lets it compose from approved parts
+- Place this step among the three ways to make a screen in book lesson 20.10 (fixed, from approved parts, open): here the model picks one fixed screen per request and fills it with data; step 19 lets it compose from approved parts
 - Keep widgets portable across Claude and ChatGPT
 - Respect payload size, theming and accessibility inside the chat
 
@@ -51,7 +53,7 @@ Sales widgets for the step 8 server, each showing only the signed-in company's d
 - **Widget to host messaging**: Widgets can call tools and send messages back through the host.
 - **Fixed, approved-parts and open screens (book lesson 20.10)**: This step builds fixed screens that the model selects. Composing a screen from approved parts comes in step 19. Open screens, where the model writes its own HTML, are out of scope because they are hard to keep safe.
 
-## Planned outline
+## Outline
 
 1. How MCP Apps works
 2. Setting up React and a bundler for widgets
@@ -69,14 +71,14 @@ Sales widgets for the step 8 server, each showing only the signed-in company's d
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 8 code into `step-09-generative-ui-mcp-apps/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 8 code into `step-09-generative-ui-mcp-apps/`.**
 
 ```text
-Copy my step-08 code into step-09-generative-ui-mcp-apps/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-09 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-09 from my step-08 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-08 code into step-09-generative-ui-mcp-apps/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-09 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-09 from my step-08 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and plan the widgets.**
@@ -118,21 +120,23 @@ Deploy, then give me a test checklist for Claude (web and Desktop) and ChatGPT c
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-09-generative-ui-mcp-apps/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tenant isolation: widgets show only the signed-in company's data, and every tool a widget calls re-checks the caller's company
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-09-done && git push origin step-09-done`
-- [ ] Submitted in the form: fork URL, tag `step-09-done`, live server URL, and screenshots of a React widget (table, chart or form) rendering in the chat in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing a React widget (table, chart or form) rendering in the chat in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-09-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

@@ -1,19 +1,19 @@
 # Step 06: Production Data Tools on Neon: Hyperdrive, Writes and Row-Level Security
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Your server already reads a well-designed schema from Neon. Now make its data access ready for real clients: fast pooled connections through Cloudflare Hyperdrive, a Neon branch per environment, list tools that page and summarize, a write tool that validates and runs in a transaction, and row-level security so the database itself keeps each company's rows apart.
+
+> 🏬 **Stockroom's ask:** Stockroom's first paying customers are coming on. Their staff will page through thousands of orders and record new ones, and they must never see another customer's rows, even if one of your queries has a bug.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [19.17 A database behind a stateless server](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/a-database-behind-a-stateless-server/). Connecting a Worker to Postgres without exhausting connections.
-- [19.8 Row-level security](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/row-level-security/). Letting the database enforce whose rows a query may see.
-- [19.9 One company per transaction](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Setting the owner for one transaction only, so a pooled connection never leaks it.
+- [19.17 What if the database is slow or asleep?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/a-database-behind-a-stateless-server/). Connecting a Worker to Postgres without exhausting connections.
+- [19.8 What if a query forgets its company filter?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/row-level-security/). Letting the database enforce whose rows a query may see.
+- [19.9 What if the last call's company is still set?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/one-company-per-transaction/). Setting the owner for one transaction only, so a pooled connection never leaks it.
 - [Field guide F3, Hyperdrive from zero](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/field-guide-business-data-and-retrieval/#f3-hyperdrive-from-zero). Pooling Postgres connections for Workers.
-- [19.10 Where the guarantee stops](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/where-the-guarantee-stops/). Seven things that happen outside row-level security (keys, error messages, roles that skip it, exports, caches, logs) and the rule that closes each.
-- [19.12 Proving the data stays apart](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/proving-the-data-stays-apart/). A data matrix that tries every table from another company, with planted bugs it must catch.
+- [19.10 What can still leak when the rows are safe?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/where-the-guarantee-stops/). Seven things that happen outside row-level security (keys, error messages, roles that skip it, exports, caches, logs) and the rule that closes each.
+- [19.12 How do you prove the data stays apart?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/proving-the-data-stays-apart/). A data matrix that tries every table from another company, with planted bugs it must catch.
 
 **Official docs.** Keep these open while you build:
 
@@ -34,6 +34,8 @@ A schema that works for one person testing is not yet safe for a client. Real us
 - **What it solves.** Slow or failing calls under load, oversized tool results that overflow the model's context (solved with pagination and summaries), half-finished writes (solved with transactions), and one missing `WHERE` clause leaking another user's orders (solved with RLS).
 - **Alternatives.** Neon's own connection pooler or its HTTP driver without Hyperdrive, and filtering only in application code without RLS, which works until the first bug.
 
+**In the Agent Factory Stack.** Hyperdrive with a standard Postgres driver is the stack's chosen way to reach Neon, and the guide compares it with Neon's serverless driver. See [Two decisions this stack makes for you](../docs/agent-factory-stack.md#two-decisions-this-stack-makes-for-you) in the stack guide.
+
 ## What you will learn
 
 - Connect through Cloudflare Hyperdrive, and explain why pooling matters for Workers
@@ -43,7 +45,7 @@ A schema that works for one person testing is not yet safe for a client. Real us
 - Build a write tool that validates input and runs in a transaction
 - Force row-level security on every business table, with `USING` (which rows a query may see) and `WITH CHECK` (which rows it may write), failing closed when no company is set
 - Set the company with `set_config('app.tenant_id', $1, true)` inside each tool call's transaction, from the token only (book lesson 19.9)
-- Close the gaps row-level security doesn't cover: the company in every key, identical "not found" errors, no `SECURITY DEFINER` functions, Hyperdrive query caching off, and no rows in logs (book lesson 19.10)
+- Close the gaps row-level security doesn't cover: the company in every key, identical "not found" errors, no `SECURITY DEFINER` functions, no view the connector reads unless it is `security_invoker`, no `TRUNCATE` right for either role, Hyperdrive query caching off, and no rows in logs (book lesson 19.10)
 - Prove it with a data matrix that tries every table from another company, plus planted bugs it must catch
 
 ## What you will build
@@ -63,7 +65,7 @@ The step 5 sales server, production-ready: `list_orders` (filters and cursor pag
 - **Data matrix**: A test that acts as one company against every table and every route, and must find nothing of another company's.
 - **Context budgeting**: Return pages and summaries, not whole tables.
 
-## Planned outline
+## Outline
 
 1. From "it works" to production data access
 2. Hyperdrive and pooled connections
@@ -81,14 +83,14 @@ The step 5 sales server, production-ready: `list_orders` (filters and cursor pag
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 5 code into `step-06-neon-production/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 5 code into `step-06-neon-production/`.**
 
 ```text
-Copy my step-05 code into step-06-neon-production/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-06 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-06 from my step-05 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-05 code into step-06-neon-production/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-06 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-06 from my step-05 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and plan the production changes.**
@@ -118,7 +120,7 @@ Add create_order with strict validation. Insert the order and its order_items in
 **6. Add row-level security.**
 
 ```text
-Add row-level security to every business table, as book lessons 19.8 and 19.9 teach: ENABLE and FORCE row level security, and a policy for the connector role with USING (org_id = current_setting('app.tenant_id', true)) and the same WITH CHECK, so a query with no company set sees nothing. Add one forTenant(ctx, fn) helper that opens a transaction, calls set_config('app.tenant_id', $1, true) with the company from the verified token as a parameter, runs the tool's queries and commits, and make every tool use it. Then close the gaps from lesson 19.10: make every "not found" identical whether the row is missing or belongs to another company, make sure the connector role can't reach a SECURITY DEFINER function, and keep rows out of logs and errors. Finally add a data matrix test (lesson 19.12) that acts as one company against every table and tool, and plant three bugs (a tool with no WHERE clause, a policy without WITH CHECK, a query outside forTenant) that the matrix must catch before you remove them.
+Add row-level security to every business table, as book lessons 19.8 and 19.9 teach: ENABLE and FORCE row level security, and a policy for the connector role with USING (org_id = current_setting('app.tenant_id', true)) and the same WITH CHECK, so a query with no company set sees nothing. Add one forTenant(ctx, fn) helper that opens a transaction, calls set_config('app.tenant_id', $1, true) with the company from the verified token as a parameter, runs the tool's queries and commits, and make every tool use it. Then close the gaps from lesson 19.10: make every "not found" identical whether the row is missing or belongs to another company, make sure the connector role can't reach a SECURITY DEFINER function, a view that isn't security_invoker or a materialized view, and that neither role may TRUNCATE a table (row-level security doesn't apply to TRUNCATE), and keep rows out of logs and errors. Finally add a data matrix test (lesson 19.12) that acts as one company against every table and tool, and plant three bugs (a tool with no WHERE clause, a policy without WITH CHECK, a query outside forTenant) that the matrix must catch before you remove them.
 ```
 
 **7. Deploy and test.**
@@ -130,21 +132,23 @@ Run the migrations against the production branch, deploy, and give me prompts to
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-06-neon-production/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Row-level security is forced on every business table, and the data matrix passes and caught each planted bug
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-06-done && git push origin step-06-done`
-- [ ] Submitted in the form: fork URL, tag `step-06-done`, live server URL, and screenshots of paging through orders and creating an order in **Claude** and **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing paging through orders and creating an order in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-06-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

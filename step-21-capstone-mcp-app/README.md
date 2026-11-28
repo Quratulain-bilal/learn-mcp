@@ -1,22 +1,21 @@
 # Step 21: Capstone: A Complete MCP App for a Real Client
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
+Build one complete, client-ready MCP app with the simplest design that meets a client's needs. Every capstone has the same core: a multi-tenant remote MCP server on Cloudflare Workers with sign-in, business data in Neon with row-level security, screens chosen from intent, security, tests, production deploys and a price. On top of that core, you add only the extras the client actually needs (company SSO, a dedicated database for an enterprise customer, search by meaning, skills, Durable Objects, Queues, Workflows, Tasks, Events, self-serve billing, a directory listing and more), and you justify each one. The capstone grades your judgment, not how many technologies you use. This time you don't extend the sales server. You start Stockroom's next product from a brief (or a product for a client of your own), which is the job you'll do as an FDE or a founder, and the result is your portfolio piece.
 
-Build one complete, client-ready MCP app with the simplest design that meets a client's needs. Every capstone has the same core: a multi-tenant remote MCP server on Cloudflare Workers with sign-in, business data in Neon with row-level security, search by meaning, screens chosen from intent, security, tests, production deploys and billing. On top of that core, you add only the extras the client actually needs (skills, Durable Objects, Queues, Workflows, Tasks, Events and more), and you justify each one. This time you don't extend the sales server. You start a new product for a new client, which is the job you'll do as an FDE or a founder, and the result is your portfolio piece.
+> 🏬 **Stockroom's ask:** Stockroom's sales assistant is selling, and its customers now want inventory and purchasing too. This time Stockroom hands you a brief instead of prompts. (You may bring a client of your own instead.)
 
 > **Note:** Some extensions (Skills over MCP, Tasks and Events) may still be rolling out in Claude or ChatGPT. Check the [client support matrix](https://modelcontextprotocol.io/extensions/client-matrix). If you choose one of them, make sure the app still works through plain tools where a client doesn't support them yet.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [17.5 When to write your own connector](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/built-in-custom-skill-or-connector/). Deciding what the client actually needs before building.
-- [20.16 How the pieces fit](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-the-pieces-fit/). Core MCP plus extensions as one connector, and the common mistakes.
-- [18.9 What a tenant is](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
-- [19.7 Three ways to keep data apart](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/three-ways-to-keep-data-apart/). Choosing how tenants are separated in Neon.
-- [20.17 Charging and the screen](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/charging-and-the-screen/). Turning the app into something a client pays for.
+- [17.5 When is a connector worth writing?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/built-in-custom-skill-or-connector/). Deciding what the client actually needs before building.
+- [20.15 How do the pieces fit together?](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/how-the-pieces-fit/). Core MCP plus extensions as one connector, the common mistakes, and (in its last section) where the check of who has paid goes when the app has screens.
+- [18.9 How does one connector serve many companies?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/what-a-tenant-is/). A product serves many companies, and each company's people and data stay apart.
+- [19.7 Shared tables, or a database per company?](https://agentfactory.panaversity.org/building-ai-workers/business-data-and-retrieval/three-ways-to-keep-data-apart/). Choosing how tenants are separated in Neon.
 - [Lab 20b, a full interactive app](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/lab-review-workspace/). A worked example of a full app, end to end.
-- *Optional:* [17.10 Watching a connector](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/watching-a-connector/). Knowing what the app is doing once real users arrive.
+- *Optional:* [17.10 How do you see what a connector did?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/watching-a-connector/). Knowing what the app is doing once real users arrive.
 
 **Official docs.** Keep these open while you build:
 
@@ -29,14 +28,16 @@ This repo is the hands-on companion to [The AI Agent Factory](https://agentfacto
 
 ## Why this step matters
 
-Every earlier step taught one technology on the same sales server, with the prompts written for you. Clients don't arrive with prompts. They arrive with a business problem, and you decide which parts to use and how they fit. The capstone proves you can take a brief, design the product, build it with Claude Code, ship it to the AI apps the client already uses, and explain your choices. It is the piece you show to clients, employers and the PCDV-F and CCDV-F exams.
+Every earlier step taught one technology on the same sales server, with the prompts written for you. Clients don't arrive with prompts. They arrive with a business problem, and you decide which parts to use and how they fit. The capstone proves you can take a brief, design the product, build it with Claude Code, ship it to the AI apps the client already uses, and explain your choices. It is the piece you show to clients and employers, and it pulls together what you practised for the PCDV-F and CCDV-F exams.
 
 ## Why this technology in an MCP server: The right ones, together
 
-- **What it is.** The capstone combines the course's core technologies with the extras a real client needs. The requirements table below marks each feature as core or extra, and maps it to the technology and step that teaches it.
+- **What it is.** The capstone combines the bootcamp's core technologies with the extras a real client needs. The requirements table below marks each feature as core or extra, and maps it to the technology and step that teaches it.
 - **Why an MCP server uses it.** Each technology solves a different problem for an MCP server: Workers make it reachable, resources and prompts give users data and starting points, OAuth says who is calling, Neon holds the business data, pgvector searches it by meaning, KV caches it, MCP Apps shows it, skills teach the model the job, Durable Objects keep exact per-user state, Queues and Workflows run long work, Tasks and Events give that work a standard face, security hardening, tests and environments keep it safe and reliable, and billing and directory listing make it a product.
 - **What it solves.** A real client's problem, end to end, in the AI apps they already use.
-- **Alternatives.** Use the simplest piece that meets each requirement, and say why in NOTES.md. An extra you add without a client need costs points, because clients pay for a product they can run, not for a tour of the course. A client on another cloud may need other hosting or databases, but the MCP design (tools, auth, widgets, skills, tasks and events) carries over unchanged.
+- **Alternatives.** Use the simplest piece that meets each requirement, and say why in NOTES.md. An extra you add without a client need costs points, because clients pay for a product they can run, not for a tour of the bootcamp. A client on another cloud may need other hosting or databases, but the MCP design (tools, auth, widgets, skills, tasks and events) carries over unchanged.
+
+**In the Agent Factory Stack.** The capstone uses the whole stack, and the guide says when a client's situation justifies something else. See [When to choose something else](../docs/agent-factory-stack.md#when-to-choose-something-else) in the stack guide.
 
 ## What you will learn
 
@@ -49,16 +50,18 @@ Every earlier step taught one technology on the same sales server, with the prom
 
 ## What you will build
 
-**Stockroom**: an AI-native inventory and purchasing app for small distributors and retailers. Staff run the stockroom by asking Claude or ChatGPT, and the right screen appears in the chat. You may pick another client and domain instead (for example a clinic's appointments or a contractor's jobs), as long as your product meets this table. Build every **Core** row. Then pick at least two **Extra** rows that your client needs, and for each one write in NOTES.md the need, why something simpler isn't enough, and what it costs to run. For each extra you leave out, write one line on why the client doesn't need it.
+**Stockroom Inventory**: Stockroom's next product, an AI-native inventory and purchasing app for the same small distributors and retailers. Their staff run the stockroom by asking Claude or ChatGPT, and the right screen appears in the chat. You may pick another client and domain instead (for example a clinic's appointments or a contractor's jobs), as long as your product meets this table. Build every **Core** row. Then pick at least two **Extra** rows that your client needs, and for each one write in NOTES.md the need, why something simpler isn't enough, and what it costs to run. For each extra you leave out, write one line on why the client doesn't need it.
 
 | Requirement | Core or extra | Stockroom feature | Technology (step) |
 | --- | --- | --- | --- |
 | Remote server, good tools | Core | Tools for products, stock levels, suppliers and purchase orders, with annotations and recoverable errors | Workers, tool design (1, 2) |
 | Reference data and starter prompts | Extra | Supplier terms and the product catalog as resources, and prompts such as "weekly stock check" | Resources and prompts (3) |
-| Sign-in, many companies | Core | Each company has its own staff, roles (staff, manager) and data, and can let its staff sign in with the company's own identity provider (SSO) | Better Auth + D1, organization and SSO plugins (4), per-company row-level security (6) |
-| Tenant isolation everywhere | Core | Shared tables with row-level security for most companies and a dedicated database for one enterprise customer, per-company settings, tenant-scoped keys, objects, messages, runs and events, and a cross-tenant test suite | Multi-tenant architecture (7) |
+| Sign-in, many companies | Core | Each company has its own staff, roles (staff, manager) and data | Better Auth + D1, organization plugin (4), per-company row-level security (6) |
+| Company sign-in (SSO) | Extra | A company's staff sign in with the company's own identity provider, for a client whose customers ask for it | Better Auth SSO plugin (4) |
+| Tenant isolation everywhere | Core | Shared tables with row-level security, per-company settings, tenant-scoped keys, objects, messages, runs and events, and a cross-tenant test suite | Multi-tenant architecture (7) |
+| Enterprise tier | Extra | A dedicated Neon database for one enterprise customer, behind the tenant router, for a client that sells to companies who require it | Multi-tenant architecture (7) |
 | Business data | Core | Products, stock movements, suppliers and purchase orders, in a schema normalized to 3NF | Relational design + Neon Postgres (5, 6) |
-| Search by meaning | Core | Supplier terms, return rules and the product catalog searchable by meaning, citing document and line or abstaining, measured by a question set in CI | pgvector retrieval (8) |
+| Search by meaning | Extra (core if the product answers questions from documents) | Supplier terms, return rules and the product catalog searchable by meaning, citing document and line or abstaining, measured by a question set in CI | pgvector retrieval (8) |
 | Fast, slightly stale data | Extra | Supplier catalog and settings cached for quick lookups | Workers KV (2 to 4, 7) |
 | Screens in the chat | Core | Stock table, reorder form, purchase-order card and a KPI dashboard, chosen by the model from intent | MCP Apps + generative UI (9, 19) |
 | Know-how | Extra | A `weekly-reorder-review` skill that checks low stock, proposes orders and explains them, plus a per-company playbook (reorder rules and approvers) served only to that company | Skills over MCP (10) |
@@ -70,7 +73,9 @@ Every earlier step taught one technology on the same sales server, with the prom
 | Safe against attack | Core | A threat model, token audience checks, least-privilege tools, elicitation confirmations before destructive actions, and an injection test on supplier and order notes | Security hardening (16) |
 | Proven and observable | Core | Unit and integration tests, an eval set for tool and screen choice, structured logs and traces | Testing, evals and observability (17) |
 | Production | Core | Staging and production environments, CI/CD and a release checklist with rollback | Deploy and test (18) |
-| A product you can sell | Core | Plans per company with usage limits, Stripe test-mode checkout, and a directory submission pack | Billing and distribution (20) |
+| A price | Core | A monthly price with the Cloudflare and Neon costs behind it, in CLIENT.md and NOTES.md | Billing and distribution (20) |
+| Self-serve plans and billing | Extra | Plans per company with usage limits checked on every call, and Stripe test-mode checkout, for a product sold to many companies (a bespoke build for one client is usually invoiced instead) | Billing and distribution (20) |
+| Directory listing | Extra | A directory submission pack, for a product that customers should find in Claude's and ChatGPT's directories | Billing and distribution (20) |
 
 ## Key concepts
 
@@ -81,7 +86,7 @@ Every earlier step taught one technology on the same sales server, with the prom
 - **Evaluation**: A fixed set of realistic prompts with the expected tools and screens, run in each client before every release.
 - **Handover**: Documentation, a demo and a test plan that let a client run and trust what you built.
 
-## Planned outline
+## Outline
 
 1. The client brief and choosing a product
 2. Architecture: mapping requirements to technologies
@@ -100,32 +105,32 @@ Every earlier step taught one technology on the same sales server, with the prom
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo. The prompts here are shorter than in earlier steps on purpose: you make more of the decisions.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)). The prompts here are shorter than in earlier steps on purpose: you make more of the decisions.
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 20 code into `step-21-capstone-mcp-app/` as a starting skeleton.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 20 code into `step-21-capstone-mcp-app/` as a starting skeleton.**
 
 ```text
-Copy my step-20 code into step-21-capstone-mcp-app/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-21 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Don't change any features yet.
+Copy my step-20 code into step-21-capstone-mcp-app/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-21 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Don't change any features yet.
 ```
 
 **2. Switch to plan mode and design the product.**
 
 ```text
-Read step-21-capstone-mcp-app/README.md and the technology rules in AGENTS.md. I'm building Stockroom (or tell me if I name another product). Propose the architecture: tenants and roles, Neon tables, the tools with their annotations, and the widgets for every Core row. Then interview me about the client's needs and propose which Extra rows to add, at least two, with the need, why something simpler isn't enough and the running cost for each, and one line for each extra we leave out. If we choose Skills, Tasks or Events, include a fallback for clients that don't support them yet. Write the agreed design to step-21-capstone-mcp-app/NOTES.md.
+Read step-21-capstone-mcp-app/README.md and the technology rules in AGENTS.md. I'm building Stockroom Inventory (or tell me if I name another product). Propose the architecture: tenants and roles, Neon tables, the tools with their annotations, and the widgets for every Core row. Then interview me about the client's needs and propose which Extra rows to add, at least two, with the need, why something simpler isn't enough and the running cost for each, and one line for each extra we leave out. If we choose Skills, Tasks or Events, include a fallback for clients that don't support them yet. Write the agreed design to step-21-capstone-mcp-app/NOTES.md.
 ```
 
 **3. Start the product on a clean base.**
 
 ```text
-Remove the sales-specific code, keeping the auth, Workers, widget build and test setup. Create a new D1 database for Stockroom's sign-in and a new Neon project or branch for its data, add tenants and roles, set up single sign-on with Better Auth's SSO plugin so each company can use its own identity provider, and make every query and tool scoped to the signed-in user's company.
+Remove the sales-specific code, keeping the auth, Workers, widget build and test setup. Create a new D1 database for Stockroom Inventory's sign-in and a new Neon project or branch for its data, add tenants and roles (and single sign-on with Better Auth's SSO plugin only if we chose that extra), and make every query and tool scoped to the signed-in user's company.
 ```
 
 **4. Build the data model and core tools.**
 
 ```text
-Create the Neon schema and seed data for two sample companies, then build the core tools for products, stock, suppliers and purchase orders. Make supplier terms and the catalog searchable by meaning with pgvector, citing or abstaining, with a retrieval question set. Add tests that one company can never see another's data.
+Create the Neon schema and seed data for two sample companies, then build the core tools for products, stock, suppliers and purchase orders. If we chose search by meaning, make supplier terms and the catalog searchable with pgvector, citing or abstaining, with a retrieval question set. Add tests that one company can never see another's data.
 ```
 
 **5. Build the screens.**
@@ -149,7 +154,7 @@ Write SECURITY.md with a threat model and a test for each risk, add unit and int
 **8. Make it a product and prepare the handover.**
 
 ```text
-Add plans per company with usage limits checked on every call and Stripe test-mode checkout outside the chat, and write DISTRIBUTION.md with the directory submission pack. Then add to NOTES.md: an architecture diagram in Mermaid, setup steps for a new client, known limits and fallbacks, a three-minute demo script, and a suggested monthly price with your reasoning.
+If we chose self-serve billing, add plans per company with usage limits checked on every call and Stripe test-mode checkout outside the chat, with step 20's billing tests. If we chose directory listing, write DISTRIBUTION.md with the submission pack. Then add to NOTES.md: an architecture diagram in Mermaid, setup steps for a new client, known limits and fallbacks, a three-minute demo script, and a suggested monthly price with your reasoning.
 ```
 
 **9. Validate it with a client.**
@@ -161,24 +166,28 @@ Help me write CLIENT.md for a real small business, or a classmate playing one: d
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-21-capstone-mcp-app/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
-- [ ] Tenant isolation: at least two sample companies (one shared, one dedicated), and the cross-tenant suite proves they never see each other's data
+- [ ] Tenant isolation: at least two sample companies (plus a dedicated-database company if you chose the enterprise tier), and the cross-tenant suite proves they never see each other's data
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
+- [ ] It works in ChatGPT (custom MCP server)
 - [ ] Every Core row is implemented, and at least two Extra rows, each justified in NOTES.md (with a fallback where a client doesn't support an extension yet)
 - [ ] NOTES.md has the architecture, evaluation results, setup steps, demo script and price
 - [ ] CLIENT.md has the discovery notes, proposal, price, demo feedback and acceptance test results
-- [ ] Tagged and pushed: `git tag step-21-done && git push origin step-21-done`
-- [ ] Submitted in the form: fork URL, tag `step-21-done`, live server URL, screenshots of at least three different screens chosen from intent in **Claude** and **ChatGPT**, and a link to a demo video of up to three minutes
+- [ ] Project defence recorded (up to ten minutes: it works, one tool end to end, one tenant-isolation decision, one change you made; see [SUBMITTING.md](../SUBMITTING.md#10-defend-your-project)) and its link added to this step's NOTES.md
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing at least three different screens chosen from intent in **Claude** and **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] A demo video of up to three minutes is recorded, and its link is in NOTES.md
+- [ ] Tagged `step-21-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 

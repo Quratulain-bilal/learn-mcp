@@ -1,19 +1,19 @@
 # Step 17: Testing, Evals and Observability
 
-> 🚧 **Under development.** This step is being written. The plan below shows what it will cover, and the code and instructions are coming soon.
-
 Prove the server works, keep proving it on every change, and see what it does once real users arrive. You add automated tests that run the Worker the way Cloudflare does, integration tests that call the server over MCP, an **eval set** that checks the model picks the right tool and widget for realistic requests in Claude and ChatGPT, and structured logs, traces and metrics on Cloudflare.
+
+> 🏬 **Stockroom's ask:** Stockroom ships changes every week and can't afford a reworded tool description that silently breaks a customer's workflow. It wants tests, evals and logs that catch it first.
 
 ## Learn first
 
-This repo is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
+This bootcamp is the hands-on companion to [The AI Agent Factory](https://agentfactory.panaversity.org/). Study these lessons from the book **before** you start building this step:
 
-- [17.6 Specify, generate, verify](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/specify-generate-verify/). Writing the checks before trusting what a coding agent built.
-- [17.10 Watching a connector](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/watching-a-connector/). What to log and measure once the server is live.
+- [17.6 How do you trust a connector an agent wrote?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/specify-generate-verify/). Writing the checks before trusting what a coding agent built.
+- [17.10 How do you see what a connector did?](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/watching-a-connector/). What to log and measure once the server is live.
 - [Field guide F7, Seeing the server's spans](https://agentfactory.panaversity.org/building-ai-workers/connectors-and-mcp/field-guide-connectors/#f7-seeing-the-servers-spans). Tracing tool calls on Cloudflare.
-- [18.13 Proving the sign-in keeps companies apart](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/proving-the-sign-in-keeps-companies-apart/). Tests that prove isolation, not just assume it.
-- [18.16 Watching who did what](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/watching-who-did-what/). Logs that answer "who did this?".
-- [MCP Apps field guide F5, Testing a page](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/field-guide-mcp-apps/#f5-testing-a-page). Testing widgets.
+- [18.13 How do you prove companies stay apart?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/proving-the-sign-in-keeps-companies-apart/). Tests that prove isolation, not just assume it.
+- [18.16 Who did what, for which company?](https://agentfactory.panaversity.org/building-ai-workers/securing-connectors/watching-who-did-what/). Logs that answer "who did this?".
+- [MCP Apps field guide F1, Testing a page](https://agentfactory.panaversity.org/building-ai-workers/mcp-apps/field-guide-mcp-apps/#f1-testing-a-page). Testing widgets.
 - *Optional:* [16.8 Watching it run: telemetry](https://agentfactory.panaversity.org/building-ai-workers/skills-and-plugins/watching-it-run/). Telemetry for skills.
 
 **Official docs.** Keep these open while you build:
@@ -36,6 +36,8 @@ By now the server has many moving parts, and a change to one tool description ca
 - **What it solves.** Regressions shipped to clients, tools the model silently stops using after a description change, and bug reports you can't reproduce.
 - **Alternatives.** Jest or another test runner (Vitest is what Cloudflare supports for the Workers runtime), hosted eval tools, and monitoring services such as Sentry, Datadog or any OpenTelemetry backend.
 
+**In the Agent Factory Stack.** Vitest in the Workers runtime is the stack's test tool, and evals check the protocol layer from a real client's side. See [Where each technology appears in this bootcamp](../docs/agent-factory-stack.md#where-each-technology-appears-in-this-bootcamp) in the stack guide.
+
 ## What you will learn
 
 - Run unit tests in the Workers runtime with real bindings (KV, D1, Durable Objects, Queues)
@@ -57,7 +59,7 @@ A test suite (unit, integration and isolation tests), an `evals/` folder with 30
 - **Structured log**: A log line as data (tool, user, duration, result) that you can search and count.
 - **Trace**: The path of one request through every service it touched.
 
-## Planned outline
+## Outline
 
 1. What to test in an MCP server
 2. Unit tests in the Workers runtime
@@ -73,14 +75,14 @@ A test suite (unit, integration and isolation tests), an `evals/` folder with 30
 
 ## Build it with Claude Code
 
-Every step is built with **Claude Code in Claude Desktop**. Follow the instructions in order and paste each prompt into the **Code** tab of Claude Desktop. Read what Claude proposes before you approve it, because understanding the code is the point. The bundled `build-mcp-server`, `build-mcp-app` and `build-mcpb` skills load automatically in this repo.
+> 🧭 **Work with the [Panaversity AI Method](../docs/panaversity-ai-method.md).** Read Stockroom's ask and the submission checklist first, paste the prompts below as your brief, then improve, check and commit with the [end-of-step prompt](../docs/panaversity-ai-method.md#a-prompt-for-the-end-of-each-step).
 
-> These prompts are a draft and will be refined as the step is developed.
+Every step is built with **Claude in a thread of your bootcamp's Claude project**, working on your local clone (see [How we work](../README.md#how-we-work-local-first-human-in-the-loop)). Follow the instructions in order and paste each prompt into the thread. Read what Claude proposes before you approve it, because understanding the code is the point. Claude never commits or pushes: you review the changes, then commit and push them in GitHub Desktop. The prompts use Anthropic's `build-mcp-server` and `build-mcp-app` skills (see [Built-in skills](../README.md#built-in-skills)).
 
-**1. Open the repo's root folder in the Code tab of Claude Desktop so the bundled skills load, then copy your step 16 code into `step-17-testing-and-observability/`.**
+**1. Start a new thread for this step in your bootcamp's Claude project, then copy your step 16 code into `step-17-testing-and-observability/`.**
 
 ```text
-Copy my step-16 code into step-17-testing-and-observability/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the course's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-17 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-17 from my step-16 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
+Copy my step-16 code into step-17-testing-and-observability/ so I can build on it. Copy only the source and config files: skip README.md (this folder already has the bootcamp's README, which must not change), NOTES.md, node_modules/, .wrangler/, dist/ and .dev.vars. Then rename the Worker in the wrangler config to learn-mcp-step-17 so it deploys alongside my earlier steps instead of replacing them, run npm install, and confirm the project still builds. Then create a Neon branch named step-17 from my step-16 branch and point this step's database settings (the connection string in .dev.vars and as a secret, and Hyperdrive once the server uses it) at the new branch, so my earlier steps keep working while they are graded.
 ```
 
 **2. Switch to plan mode and plan the testing.**
@@ -116,23 +118,25 @@ Add a CI workflow that runs the tests on every push. Deploy, trigger a few tool 
 ## Testing targets
 
 - claude.ai and Claude Desktop (primary)
-- ChatGPT (developer mode)
+- ChatGPT (custom MCP server)
 - Vitest in the Workers runtime, and CI
 
 ## Submission checklist
 
-Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the course repo.
+Submit through your **fork**, following [SUBMITTING.md](../SUBMITTING.md). ⛔ Do not open a pull request to the bootcamp repo.
 
-- [ ] Your fork is synced with the course repo
+- [ ] Your fork is synced with the bootcamp repo
 - [ ] All code for this step is in `step-17-testing-and-observability/` and pushed to your fork
 - [ ] No secrets are committed (`.dev.vars.example` only)
 - [ ] The server is deployed to your own Cloudflare account and the `/mcp` URL works
 - [ ] Tests pass in CI, and evals/ has results from the automated run and from the manual pass in both clients
 - [ ] Tenant isolation: the cross-tenant suite runs in CI on every push
 - [ ] It works in claude.ai or Claude Desktop
-- [ ] It works in ChatGPT (developer mode)
-- [ ] Tagged and pushed: `git tag step-17-done && git push origin step-17-done`
-- [ ] Submitted in the form: fork URL, tag `step-17-done`, live server URL, and screenshots of passing CI, your eval results, and a trace of a tool call from **Claude** or **ChatGPT**
+- [ ] It works in ChatGPT (custom MCP server)
+- [ ] Screenshots are committed in this step's folder as `claude.png` and `chatgpt.png` (add more files if you need them, and crop out anything private), showing passing CI, your eval results, and a trace of a tool call from **Claude** or **ChatGPT**
+- [ ] NOTES.md starts with this step's live `/mcp` URL
+- [ ] Tagged `step-17-done` and pushed (in GitHub Desktop: **History**, right-click the commit, **Create Tag…**, then **Push origin**)
+- [ ] Submitted once through the [form](https://forms.gle/u1m8F7UjDJxk3J9M6), or your response there updated: fork URL, the last step you completed and its live server URL (see [SUBMITTING.md](../SUBMITTING.md#8-submit-your-work))
 
 ## References
 
