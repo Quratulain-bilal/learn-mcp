@@ -16,7 +16,7 @@ The expected screen is the widget URI key from `src/widgets/resources.ts`. `text
 | 8 | Put our 2025 report next to this month's numbers. | `show_dashboard` | `dashboard (report, kpi)` |  |  |  |
 | 9 | Which customers should I call this week? Show me the numbers. | `show_dashboard` | `dashboard (chart, table)` |  |  |  |
 | 10 | Make me a one-screen summary of December. | `show_dashboard` | `dashboard (kpi, chart)` |  |  |  |
-| 11 | Show me the latest orders. | `list_orders` | `orders-table` |  |  |  |
+| 11 | Show me the latest orders. | `list_orders` | `orders-table` | yes / yes |  |  |
 | 12 | Revenue by month for 2025, as a chart. | `get_sales_summary` | `sales-chart` |  |  |  |
 | 13 | What is in order SO-0142? | `get_order` | `text only` |  |  |  |
 | 14 | I want to enter a new order. | `open_order_form` | `order-form` |  |  |  |

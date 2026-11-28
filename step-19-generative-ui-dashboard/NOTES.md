@@ -46,11 +46,11 @@ The user says what they want to know ("how are we doing this year?"), and the **
 
 | | claude.ai | Claude Desktop | ChatGPT |
 | --- | --- | --- | --- |
-| Right tool (of 20) | 1 of 20 checked | | 1 of 20 checked |
+| Right tool (of 20) | 2 of 20 checked | | 1 of 20 checked |
 | Sensible blocks (of the 11 dashboard intents) | 1 of 11 checked | | 1 of 11 checked |
-| Notes | prompt 1 rendered the KPI + monthly chart widget; screenshot still needed | | needs a paid plan; prompt 1 called `show_dashboard`, the text fallback was correct (KPIs + monthly chart); screenshot still needed |
+| Notes | prompt 1 rendered the KPI + monthly chart widget and prompt 11 rendered the orders-table widget; screenshots still needed | | needs a paid plan; prompt 1 called `show_dashboard`, the text fallback was correct (KPIs + monthly chart); screenshot still needed |
 
-Use `evals/dashboard-runbook.md` to record each prompt. Prompt 1 ("How are we doing this year?") was checked in claude.ai and ChatGPT after the tool description was strengthened: the right tool ran and the numbers were correct. claude.ai rendered the dashboard widget with KPI cards and a monthly chart; ChatGPT showed the text fallback. The other prompts are still unchecked.
+Use `evals/dashboard-runbook.md` to record each prompt. Prompt 1 ("How are we doing this year?") was checked in claude.ai and ChatGPT after the tool description was strengthened: the right tool ran and the numbers were correct. claude.ai rendered the dashboard widget with KPI cards and a monthly chart; ChatGPT showed the text fallback. Prompt 11 ("Show me the latest orders.") was then checked in claude.ai: `list_orders` ran and the orders-table widget rendered with 20 orders, including two from Nov 27. The other prompts are still unchecked.
 
 Client support: the official MCP extension matrix currently lists no MCP Apps support in ChatGPT, so ChatGPT can only show `show_dashboard`'s text fallback; a real widget must be verified in Claude Desktop or claude.ai. A text-only answer is not a widget pass, even when the numbers are right.
 
