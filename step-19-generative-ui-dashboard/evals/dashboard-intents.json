@@ -1,0 +1,25 @@
+{
+  "about": "20 realistic intents for the generative dashboard. For each: the tool the model should call, the widget it should open, and, for show_dashboard, the block types it should choose (order not important). Run in each client and record results in NOTES.md.",
+  "prompts": [
+    { "id": 1, "prompt": "How are we doing this year?", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart"] },
+    { "id": 2, "prompt": "Give me March 2025 at a glance.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart"] },
+    { "id": 3, "prompt": "Compare last month with the month before.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi"] },
+    { "id": 4, "prompt": "Quick health check of sales for the board meeting.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart", "table"] },
+    { "id": 5, "prompt": "Show revenue, our best product and best customer for Q2 2025.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi"] },
+    { "id": 6, "prompt": "Overview of Ayesha Khan's business with us.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "table"] },
+    { "id": 7, "prompt": "Dashboard for the Ergo Chair: who buys it and how much.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["chart", "table"] },
+    { "id": 8, "prompt": "Put our 2025 report next to this month's numbers.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["report", "kpi"] },
+    { "id": 9, "prompt": "Which customers should I call this week? Show me the numbers.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["chart", "table"] },
+    { "id": 10, "prompt": "Make me a one-screen summary of December.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart"] },
+    { "id": 11, "prompt": "Show me the latest orders.", "tool": "list_orders", "widget": "orders-table", "blocks": [] },
+    { "id": 12, "prompt": "Revenue by month for 2025, as a chart.", "tool": "get_sales_summary", "widget": "sales-chart", "blocks": [] },
+    { "id": 13, "prompt": "What is in order SO-0142?", "tool": "get_order", "widget": "none", "blocks": [] },
+    { "id": 14, "prompt": "I want to enter a new order.", "tool": "open_order_form", "widget": "order-form", "blocks": [] },
+    { "id": 15, "prompt": "Build the 2025 sales report.", "tool": "start_sales_report", "widget": "task-status", "blocks": [] },
+    { "id": 16, "prompt": "Do our monthly sales review for November 2025.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart"], "note": "monthly-sales-review skill / prompt" },
+    { "id": 17, "prompt": "What is our average order value?", "tool": "answer_business_question", "widget": "none", "blocks": [] },
+    { "id": 18, "prompt": "Top 5 products by revenue.", "tool": "get_sales_summary", "widget": "sales-chart", "blocks": [] },
+    { "id": 19, "prompt": "Can I give 12% off without approval?", "tool": "search_sales_policy", "widget": "none", "blocks": [] },
+    { "id": 20, "prompt": "Everything about sales in 2024 on one screen.", "tool": "show_dashboard", "widget": "dashboard", "blocks": ["kpi", "chart", "report"] }
+  ]
+}

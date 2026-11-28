@@ -1,0 +1,75 @@
+/*
+ * Shared widget styles. Every colour, font and radius uses the HOST's CSS variable first
+ * (set by useHostStyles), with a fallback, so the widget matches Claude or ChatGPT in
+ * light and dark mode. The fallbacks switch on data-theme, set from the host's theme.
+ */
+:root {
+  color-scheme: light;
+  --w-bg: var(--color-background-primary, #ffffff);
+  --w-bg-2: var(--color-background-secondary, #f6f6f4);
+  --w-text: var(--color-text-primary, #1f1f1d);
+  --w-text-2: var(--color-text-secondary, #5f5e5a);
+  --w-border: var(--color-border-primary, #e3e2dc);
+  --w-accent: var(--color-text-info, #2f6fde);
+  --w-danger: var(--color-text-danger, #c0392b);
+  --w-success: var(--color-text-success, #2e7d4f);
+  --w-radius: var(--border-radius-md, 8px);
+  --w-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --w-bg: var(--color-background-primary, #1f1f1e);
+  --w-bg-2: var(--color-background-secondary, #2a2a28);
+  --w-text: var(--color-text-primary, #ecebe6);
+  --w-text-2: var(--color-text-secondary, #a5a49e);
+  --w-border: var(--color-border-primary, #3a3a37);
+  --w-accent: var(--color-text-info, #7fa9f5);
+  --w-danger: var(--color-text-danger, #f08a7e);
+  --w-success: var(--color-text-success, #78c89a);
+}
+
+* { box-sizing: border-box; }
+/* Paint our own background: text colours are chosen against it, so they always contrast. */
+html, body { margin: 0; background: var(--w-bg); }
+body { font: 14px/1.45 var(--w-font); color: var(--w-text); }
+.widget { padding: 12px; }
+h1 { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+.sub { color: var(--w-text-2); font-size: 12.5px; margin: 0 0 10px; }
+.muted { color: var(--w-text-2); }
+.error { color: var(--w-danger); padding: 8px 0; }
+.ok { color: var(--w-success); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--w-text-2); border-bottom: 1px solid var(--w-border); padding: 6px 8px; }
+td { border-bottom: 1px solid var(--w-border); padding: 7px 8px; vertical-align: top; }
+tbody tr:hover { background: var(--w-bg-2); }
+.scroll { max-height: 420px; overflow: auto; }
+
+button {
+  font: inherit; font-size: 13px; color: var(--w-text); background: var(--w-bg-2);
+  border: 1px solid var(--w-border); border-radius: var(--w-radius); padding: 6px 12px; cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--w-text-2); }
+button:disabled { opacity: 0.55; cursor: default; }
+button.primary { background: var(--w-text); color: var(--w-bg); border-color: var(--w-text); }
+button[aria-pressed="true"] { background: var(--w-text); color: var(--w-bg); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--w-accent); outline-offset: 1px; }
+
+input, select {
+  font: inherit; font-size: 13px; color: var(--w-text); background: var(--w-bg);
+  border: 1px solid var(--w-border); border-radius: var(--w-radius); padding: 6px 8px; width: 100%;
+}
+label { display: block; font-size: 12.5px; color: var(--w-text-2); margin-bottom: 4px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 8px; }
+
+/* Dashboard and KPI cards (step 19 widget library) */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.kpi { border: 1px solid var(--w-border); border-radius: var(--w-radius); padding: 10px 12px; background: var(--w-bg-2); }
+.kpi-label { font-size: 12px; color: var(--w-text-2); }
+.kpi-value { font-size: 20px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.kpi-change { font-size: 12px; margin-top: 2px; }
+.block { margin-top: 14px; }
+.block h2 { font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--w-text-2); text-transform: none; }

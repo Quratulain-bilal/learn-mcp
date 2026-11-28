@@ -1,0 +1,50 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Step 19 deploys ONE environment. The staging and production pipeline lives in step 18;
+  // a second staging here would fight over queues. KV and the two queues are step-19 specific.
+  // The free Cloudflare account is at its D1 and Hyperdrive limits, so auth and business data
+  // reuse step 13's D1 and Hyperdrive config. Isolated Neon databases exist for tests, but
+  // cannot be bound until those quotas are raised.
+  "name": "learn-mcp-step-19",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  // Preview URLs would expose untested versions on public URLs: off.
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true, "invocation_logs": true },
+    "traces": { "enabled": true }
+  },
+  // A custom domain (paid: you need to own a domain on Cloudflare) would go here:
+  //   "routes": [{ "pattern": "mcp.example.com", "custom_domain": true }],
+  // This course stays on free workers.dev URLs.
+
+  "vars": { "EMBEDDINGS": "workers-ai", "ENVIRONMENT": "production" },
+  "ai": { "binding": "AI", "remote": true },
+  // Shared with step 18 because the free account has no spare Hyperdrive configs.
+  "hyperdrive": [
+    { "binding": "HYPERDRIVE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" },
+    { "binding": "TENANT_DB_ENTERPRISE", "id": "4f5bd0da7ddb4449bbec9a122c994cdf" }
+  ],
+  "durable_objects": { "bindings": [{ "name": "USER_STATE", "class_name": "UserState" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UserState"] }],
+  "queues": {
+    "producers": [
+      { "binding": "ORDER_IMPORTS", "queue": "order-imports-step-19" },
+      { "binding": "SALES_EVENTS", "queue": "sales-events-step-19" }
+    ],
+    "consumers": [
+      { "queue": "order-imports-step-19", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 3, "dead_letter_queue": "order-imports-dlq" },
+      { "queue": "sales-events-step-19", "max_batch_size": 25, "max_batch_timeout": 2, "max_retries": 5, "dead_letter_queue": "sales-events-dlq" }
+    ]
+  },
+  "workflows": [{ "name": "learn-mcp-step-19-sales-report", "binding": "SALES_REPORT", "class_name": "SalesReportWorkflow" }],
+  // Created by the first deploy (automatic provisioning), then pinned.
+  "kv_namespaces": [{ "binding": "TENANT_CACHE", "id": "7032515584374218826b72306b8a1045" }],
+  "d1_databases": [
+    { "binding": "AUTH_DB", "database_name": "learn-mcp-step-13-auth", "database_id": "5243b652-7a02-4275-a566-8c4519bd0a59", "migrations_dir": "migrations" }
+  ],
+}
